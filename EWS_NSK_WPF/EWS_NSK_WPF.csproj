@@ -8,4 +8,35 @@
     <UseWPF>true</UseWPF>
   </PropertyGroup>
 
+  <ItemGroup>
+    <None Remove="Resources\background.png" />
+    <None Remove="Resources\exit.png" />
+    <None Remove="Resources\guide_icon.png" />
+    <None Remove="Resources\journal_icon.png" />
+    <None Remove="Resources\logo.png" />
+    <None Remove="Resources\map_icon.png" />
+    <None Remove="Resources\report_icon.png" />
+    <None Remove="Resources\settings_icon.png" />
+    <None Remove="Resources\swap_icon.png" />
+    <None Remove="Resources\tablet_icon.png" />
+    <None Remove="Resources\tile_frame.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Resources\exit.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Resources\background.png" />
+    <Resource Include="Resources\guide_icon.png" />
+    <Resource Include="Resources\journal_icon.png" />
+    <Resource Include="Resources\logo.png" />
+    <Resource Include="Resources\map_icon.png" />
+    <Resource Include="Resources\report_icon.png" />
+    <Resource Include="Resources\settings_icon.png" />
+    <Resource Include="Resources\swap_icon.png" />
+    <Resource Include="Resources\tablet_icon.png" />
+    <Resource Include="Resources\tile_frame.png" />
+  </ItemGroup>
+
 </Project>
