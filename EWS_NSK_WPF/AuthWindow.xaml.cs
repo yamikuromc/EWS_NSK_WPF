@@ -6,11 +6,23 @@ namespace EWS_NSK_WPF
 {
     public partial class AuthWindow : Window
     {
-        // === "База" пользователей (заглушка) ===
-        private static readonly Dictionary<string, (string Password, string FullName, string Position)> Users =
-            new Dictionary<string, (string, string, string)>(StringComparer.OrdinalIgnoreCase)
+        // === "База" пользователей (Клан Учиха + Админ) ===
+        // Формат: Логин -> (Пароль, ФИО, Должность/Роль, УровеньДоступа)
+        private static readonly Dictionary<string, (string Password, string FullName, string Position, string AccessLevel)> Users =
+            new Dictionary<string, (string, string, string, string)>(StringComparer.OrdinalIgnoreCase)
             {
-                { "yamikuroMC", ("34521488", "Овчинникова Инесса Валерьевна", "Системный администратор") }
+        // 1. Главный Администратор (Полный доступ ко всему, как и положено "богу шиноби")
+        { "madara", ("1", "Учиха Мадара", "Главный Администратор", "MainAdmin") },
+        
+        // 2. Администратор подразделения ГПС (Управляет своей зоной, как Итачи управлял своей командой АНБУ)
+        { "itachi", ("2", "Учиха Итачи", "Администратор подразделения ГПС", "UnitAdmin") },
+        
+        // 3. Оператор (Обито наблюдает из тени, видит всё, но в базу официально не лезет)
+        { "obito", ("3", "Учиха Обито", "Оператор", "Operator") },
+        
+
+        // Наш реальный разработчик (Тоже Главный Администратор)
+        { "yamikuroMC", ("100", "Ярославцева Инесса Валерьевна", "Главный Администратор", "MainAdmin") }
             };
 
         // Свойства, которые мы вернём в главное окно после успешного входа

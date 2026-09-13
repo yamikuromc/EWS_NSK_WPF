@@ -15,8 +15,10 @@
     <None Remove="Resources\journal_icon.png" />
     <None Remove="Resources\logo.png" />
     <None Remove="Resources\map_icon.png" />
+    <None Remove="Resources\moon_icon.png" />
     <None Remove="Resources\report_icon.png" />
     <None Remove="Resources\settings_icon.png" />
+    <None Remove="Resources\sun_icon.png" />
     <None Remove="Resources\swap_icon.png" />
     <None Remove="Resources\tablet_icon.png" />
     <None Remove="Resources\tile_frame.png" />
@@ -32,8 +34,10 @@
     <Resource Include="Resources\journal_icon.png" />
     <Resource Include="Resources\logo.png" />
     <Resource Include="Resources\map_icon.png" />
+    <Resource Include="Resources\moon_icon.png" />
     <Resource Include="Resources\report_icon.png" />
     <Resource Include="Resources\settings_icon.png" />
+    <Resource Include="Resources\sun_icon.png" />
     <Resource Include="Resources\swap_icon.png" />
     <Resource Include="Resources\tablet_icon.png" />
     <Resource Include="Resources\tile_frame.png" />
