@@ -159,33 +159,34 @@ namespace EWS_NSK_WPF
             }
         }
 
-        // === ПРОВЕРКА АВТОРИЗАЦИИ (открывает окно авторизации) ===
+        // === ПРОВЕРКА АВТОРИЗАЦИИ ===
         private bool EnsureAuthorized()
         {
-            if (isAuthorized) return true;
-
-            AuthWindow authWindow = new AuthWindow();
-            authWindow.Owner = this;
-
-            if (authWindow.ShowDialog() == true)
+            // Если пользователь еще не вошел в систему
+            if (!isAuthorized)
             {
-                isAuthorized = true;
-                currentUserFullName = authWindow.AuthorizedFullName;
-                currentUserPosition = authWindow.AuthorizedPosition;
+                AuthWindow authWindow = new AuthWindow();
 
-                UserStatusCombo.Items.Clear();
-                UserStatusCombo.Items.Add(currentUserPosition);
-                UserStatusCombo.SelectedIndex = 0;
+                // Показываем окно авторизации
+                if (authWindow.ShowDialog() == true)
+                {
+                    // Сохраняем данные вошедшего пользователя
+                    isAuthorized = true;
+                    currentUserFullName = authWindow.AuthorizedFullName;
+                    currentUserPosition = authWindow.AuthorizedPosition;
 
-                MessageBox.Show($"Добро пожаловать, {currentUserFullName}!",
-                               "Авторизация выполнена",
-                               MessageBoxButton.OK,
-                               MessageBoxImage.Information);
+                    // Обновляем ComboBox в боковом меню
+                    UserStatusCombo.Items.Clear();
+                    UserStatusCombo.Items.Add(currentUserPosition);
+                    UserStatusCombo.SelectedIndex = 0;
 
-                return true;
+                    // ✅ ВОТ ЭТУ СТРОЧКУ НУЖНО ДОБАВИТЬ!
+                    UpdateGreeting();
+                }
             }
 
-            return false;
+            // Возвращаем true, если авторизован, иначе false
+            return isAuthorized;
         }
 
         // Вспомогательный метод для получения уровня доступа текущего пользователя
