@@ -28,113 +28,115 @@
         <!-- ТЁМНЫЙ СЛОЙ (по умолчанию прозрачный) -->
         <Rectangle x:Name="DarkOverlay" Grid.Row="0" Grid.Column="0" Grid.RowSpan="3" Grid.ColumnSpan="2" 
                    Fill="Black" Opacity="0" IsHitTestVisible="False"/>
-        
-        <!-- ==================== БОКОВОЕ МЕНЮ (БЕЗ ПРОКРУТКИ) ==================== -->
+
+        <!-- ==================== БОКОВОЕ МЕНЮ (С УМНЫМ ПОЛЗУНКОМ) ==================== -->
         <Border x:Name="SidebarBorder" Grid.Row="0" Grid.RowSpan="3" Grid.Column="0" Background="#C8002864">
-            <!-- Убрали ScrollViewer, теперь здесь только один StackPanel -->
-            <StackPanel Margin="0,15,0,15">
+            <!-- ScrollViewer с Auto - ползунок появится только если контент не влезает -->
+            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <StackPanel Margin="0,15,0,15">
 
-                <!-- Логотип -->
-                <Image Source="/Resources/logo.png" Width="110" Height="110" Margin="0,0,0,20" Stretch="Uniform" HorizontalAlignment="Center"/>
+                    <!-- Логотип -->
+                    <Image Source="/Resources/logo.png" Width="110" Height="110" Margin="0,0,0,20" Stretch="Uniform" HorizontalAlignment="Center"/>
 
-                <!-- НАСТРОЙКИ -->
-                <StackPanel Margin="0,0,0,15">
-                    <StackPanel Orientation="Horizontal" Margin="10,0,0,0">
-                        <Image Source="/Resources/settings_icon.png" Width="20" Height="20" Margin="0,0,10,0"/>
-                        <TextBlock Text="НАСТРОЙКИ" Foreground="Orange" FontWeight="Bold" FontSize="12" VerticalAlignment="Center"/>
+                    <!-- НАСТРОЙКИ -->
+                    <StackPanel Margin="0,0,0,15">
+                        <StackPanel Orientation="Horizontal" Margin="10,0,0,0">
+                            <Image Source="/Resources/settings_icon.png" Width="20" Height="20" Margin="0,0,10,0"/>
+                            <TextBlock Text="НАСТРОЙКИ" Foreground="Orange" FontWeight="Bold" FontSize="12" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <TextBlock Text="Пользователь" Foreground="White" FontSize="11" Margin="30,8,0,0"/>
+                        <ComboBox x:Name="UserStatusCombo" Margin="20,5,20,0" Height="25" Background="#003C78" Foreground="Black" BorderBrush="Transparent" DropDownOpened="UserStatusCombo_DropDownOpened">
+                            <ComboBoxItem Content="Гость" IsSelected="True"/>
+                        </ComboBox>
+                        <TextBlock Text="Территория" Foreground="White" FontSize="11" Margin="30,10,0,0"/>
+                        <ComboBox x:Name="TerritoryCombo" Margin="20,5,20,0" Height="25" Background="#003C78" Foreground="Black" BorderBrush="Transparent" DropDownOpened="TerritoryCombo_DropDownOpened">
+                            <ComboBoxItem Content="г. Новосибирск" IsSelected="True"/>
+                            <ComboBoxItem Content="г. Бердск"/>
+                            <ComboBoxItem Content="г. Искитим"/>
+                            <ComboBoxItem Content="Новосибирский район"/>
+                        </ComboBox>
                     </StackPanel>
-                    <TextBlock Text="Пользователь" Foreground="White" FontSize="11" Margin="30,8,0,0"/>
-                    <ComboBox x:Name="UserStatusCombo" Margin="20,5,20,0" Height="25" Background="#003C78" Foreground="Black" BorderBrush="Transparent" DropDownOpened="UserStatusCombo_DropDownOpened">
-                        <ComboBoxItem Content="Гость" IsSelected="True"/>
-                    </ComboBox>
-                    <TextBlock Text="Территория" Foreground="White" FontSize="11" Margin="30,10,0,0"/>
-                    <ComboBox x:Name="TerritoryCombo" Margin="20,5,20,0" Height="25" Background="#003C78" Foreground="Black" BorderBrush="Transparent" DropDownOpened="TerritoryCombo_DropDownOpened">
-                        <ComboBoxItem Content="г. Новосибирск" IsSelected="True"/>
-                        <ComboBoxItem Content="г. Бердск"/>
-                        <ComboBoxItem Content="г. Искитим"/>
-                        <ComboBoxItem Content="Новосибирский район"/>
-                    </ComboBox>
-                </StackPanel>
 
-                <!-- КАРТА ПГ -->
-                <StackPanel Margin="0,0,0,15">
-                    <StackPanel Orientation="Horizontal" Margin="10,0,0,0">
-                        <Image Source="/Resources/map_icon.png" Width="20" Height="20" Margin="0,0,10,0"/>
-                        <TextBlock Text="КАРТА ПГ" Foreground="Orange" FontWeight="Bold" FontSize="12" VerticalAlignment="Center"/>
+                    <!-- КАРТА ПГ -->
+                    <StackPanel Margin="0,0,0,15">
+                        <StackPanel Orientation="Horizontal" Margin="10,0,0,0">
+                            <Image Source="/Resources/map_icon.png" Width="20" Height="20" Margin="0,0,10,0"/>
+                            <TextBlock Text="КАРТА ПГ" Foreground="Orange" FontWeight="Bold" FontSize="12" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <TextBlock Text="Просмотр" Foreground="White" FontSize="11" Margin="30,8,0,0" Cursor="Hand" MouseLeftButtonUp="SidebarItem_Click" Tag="КАРТА ПГ"/>
+                        <TextBlock Text="Редактирование" Foreground="White" FontSize="11" Margin="30,4,0,0" Cursor="Hand" MouseLeftButtonUp="SidebarItem_Click" Tag="КАРТА ПГ"/>
                     </StackPanel>
-                    <TextBlock Text="Просмотр" Foreground="White" FontSize="11" Margin="30,8,0,0" Cursor="Hand" MouseLeftButtonUp="SidebarItem_Click" Tag="КАРТА ПГ"/>
-                    <TextBlock Text="Редактирование" Foreground="White" FontSize="11" Margin="30,4,0,0" Cursor="Hand" MouseLeftButtonUp="SidebarItem_Click" Tag="КАРТА ПГ"/>
-                </StackPanel>
 
-                <!-- ЖУРНАЛЫ -->
-                <StackPanel Margin="0,0,0,15">
-                    <StackPanel Orientation="Horizontal" Margin="10,0,0,0">
-                        <Image Source="/Resources/journal_icon.png" Width="20" Height="20" Margin="0,0,10,0"/>
-                        <TextBlock Text="ЖУРНАЛЫ" Foreground="Orange" FontWeight="Bold" FontSize="12" VerticalAlignment="Center"/>
+                    <!-- ЖУРНАЛЫ -->
+                    <StackPanel Margin="0,0,0,15">
+                        <StackPanel Orientation="Horizontal" Margin="10,0,0,0">
+                            <Image Source="/Resources/journal_icon.png" Width="20" Height="20" Margin="0,0,10,0"/>
+                            <TextBlock Text="ЖУРНАЛЫ" Foreground="Orange" FontWeight="Bold" FontSize="12" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <TextBlock Text="Учёт ИНППВ" Foreground="White" FontSize="11" Margin="30,8,0,0" Cursor="Hand" MouseLeftButtonUp="SidebarItem_Click" Tag="ЖУРНАЛЫ"/>
+                        <TextBlock Text="Проверки ПГ" Foreground="White" FontSize="11" Margin="30,4,0,0" Cursor="Hand" MouseLeftButtonUp="SidebarItem_Click" Tag="ЖУРНАЛЫ"/>
                     </StackPanel>
-                    <TextBlock Text="Учёт ИНППВ" Foreground="White" FontSize="11" Margin="30,8,0,0" Cursor="Hand" MouseLeftButtonUp="SidebarItem_Click" Tag="ЖУРНАЛЫ"/>
-                    <TextBlock Text="Проверки ПГ" Foreground="White" FontSize="11" Margin="30,4,0,0" Cursor="Hand" MouseLeftButtonUp="SidebarItem_Click" Tag="ЖУРНАЛЫ"/>
-                </StackPanel>
 
-                <!-- ОТЧЁТЫ по ИНППВ -->
-                <StackPanel Margin="0,0,0,15">
-                    <StackPanel Orientation="Horizontal" Margin="10,0,0,0">
-                        <Image Source="/Resources/report_icon.png" Width="20" Height="20" Margin="0,0,10,0"/>
-                        <TextBlock Text="ОТЧЁТЫ по ИНППВ" Foreground="Orange" FontWeight="Bold" FontSize="12" VerticalAlignment="Center"/>
+                    <!-- ОТЧЁТЫ по ИНППВ -->
+                    <StackPanel Margin="0,0,0,15">
+                        <StackPanel Orientation="Horizontal" Margin="10,0,0,0">
+                            <Image Source="/Resources/report_icon.png" Width="20" Height="20" Margin="0,0,10,0"/>
+                            <TextBlock Text="ОТЧЁТЫ по ИНППВ" Foreground="Orange" FontWeight="Bold" FontSize="12" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <TextBlock Text="По территории" Foreground="White" FontSize="11" Margin="30,8,0,0" Cursor="Hand" MouseLeftButtonUp="SidebarItem_Click" Tag="ОТЧЁТЫ"/>
+                        <TextBlock Text="По районам выезда" Foreground="White" FontSize="11" Margin="30,4,0,0" Cursor="Hand" MouseLeftButtonUp="SidebarItem_Click" Tag="ОТЧЁТЫ"/>
+                        <TextBlock Text="По балансодержателю" Foreground="White" FontSize="11" Margin="30,4,0,0" Cursor="Hand" MouseLeftButtonUp="SidebarItem_Click" Tag="ОТЧЁТЫ"/>
                     </StackPanel>
-                    <TextBlock Text="По территории" Foreground="White" FontSize="11" Margin="30,8,0,0" Cursor="Hand" MouseLeftButtonUp="SidebarItem_Click" Tag="ОТЧЁТЫ"/>
-                    <TextBlock Text="По районам выезда" Foreground="White" FontSize="11" Margin="30,4,0,0" Cursor="Hand" MouseLeftButtonUp="SidebarItem_Click" Tag="ОТЧЁТЫ"/>
-                    <TextBlock Text="По балансодержателю" Foreground="White" FontSize="11" Margin="30,4,0,0" Cursor="Hand" MouseLeftButtonUp="SidebarItem_Click" Tag="ОТЧЁТЫ"/>
-                </StackPanel>
 
-                <!-- ПЛАНШЕТ ИНППВ -->
-                <StackPanel Margin="0,0,0,15">
-                    <StackPanel Orientation="Horizontal" Margin="10,0,0,0">
-                        <Image Source="/Resources/tablet_icon.png" Width="20" Height="20" Margin="0,0,10,0"/>
-                        <TextBlock Text="ПЛАНШЕТ ИНППВ" Foreground="Orange" FontWeight="Bold" FontSize="12" VerticalAlignment="Center"/>
+                    <!-- ПЛАНШЕТ ИНППВ -->
+                    <StackPanel Margin="0,0,0,15">
+                        <StackPanel Orientation="Horizontal" Margin="10,0,0,0">
+                            <Image Source="/Resources/tablet_icon.png" Width="20" Height="20" Margin="0,0,10,0"/>
+                            <TextBlock Text="ПЛАНШЕТ ИНППВ" Foreground="Orange" FontWeight="Bold" FontSize="12" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <TextBlock Text="Просмотр" Foreground="White" FontSize="11" Margin="30,8,0,0" Cursor="Hand" MouseLeftButtonUp="SidebarItem_Click" Tag="ПЛАНШЕТ ИНППВ"/>
+                        <TextBlock Text="Формирование" Foreground="White" FontSize="11" Margin="30,4,0,0" Cursor="Hand" MouseLeftButtonUp="SidebarItem_Click" Tag="ПЛАНШЕТ ИНППВ"/>
                     </StackPanel>
-                    <TextBlock Text="Просмотр" Foreground="White" FontSize="11" Margin="30,8,0,0" Cursor="Hand" MouseLeftButtonUp="SidebarItem_Click" Tag="ПЛАНШЕТ ИНППВ"/>
-                    <TextBlock Text="Формирование" Foreground="White" FontSize="11" Margin="30,4,0,0" Cursor="Hand" MouseLeftButtonUp="SidebarItem_Click" Tag="ПЛАНШЕТ ИНППВ"/>
-                </StackPanel>
 
-                <!-- СПРАВОЧНИКИ -->
-                <StackPanel Margin="0,0,0,15">
-                    <StackPanel Orientation="Horizontal" Margin="10,0,0,0">
-                        <Image Source="/Resources/guide_icon.png" Width="20" Height="20" Margin="0,0,10,0"/>
-                        <TextBlock Text="СПРАВОЧНИКИ" Foreground="Orange" FontWeight="Bold" FontSize="12" VerticalAlignment="Center"/>
+                    <!-- СПРАВОЧНИКИ -->
+                    <StackPanel Margin="0,0,0,15">
+                        <StackPanel Orientation="Horizontal" Margin="10,0,0,0">
+                            <Image Source="/Resources/guide_icon.png" Width="20" Height="20" Margin="0,0,10,0"/>
+                            <TextBlock Text="СПРАВОЧНИКИ" Foreground="Orange" FontWeight="Bold" FontSize="12" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <TextBlock Text="Подразделения ППС" Foreground="White" FontSize="11" Margin="30,8,0,0" Cursor="Hand" MouseLeftButtonUp="SidebarItem_Click" Tag="СПРАВОЧНИКИ"/>
+                        <TextBlock Text="Адресные объекты" Foreground="White" FontSize="11" Margin="30,4,0,0" Cursor="Hand" MouseLeftButtonUp="SidebarItem_Click" Tag="СПРАВОЧНИКИ"/>
+                        <TextBlock Text="Характеристики" Foreground="White" FontSize="11" Margin="30,4,0,0" Cursor="Hand" MouseLeftButtonUp="SidebarItem_Click" Tag="СПРАВОЧНИКИ"/>
+                        <TextBlock Text="Параметры проверок" Foreground="White" FontSize="11" Margin="30,4,0,0" Cursor="Hand" MouseLeftButtonUp="SidebarItem_Click" Tag="СПРАВОЧНИКИ"/>
+                        <TextBlock Text="Балансодержатели" Foreground="White" FontSize="11" Margin="30,4,0,0" Cursor="Hand" MouseLeftButtonUp="SidebarItem_Click" Tag="СПРАВОЧНИКИ"/>
                     </StackPanel>
-                    <TextBlock Text="Подразделения ППС" Foreground="White" FontSize="11" Margin="30,8,0,0" Cursor="Hand" MouseLeftButtonUp="SidebarItem_Click" Tag="СПРАВОЧНИКИ"/>
-                    <TextBlock Text="Адресные объекты" Foreground="White" FontSize="11" Margin="30,4,0,0" Cursor="Hand" MouseLeftButtonUp="SidebarItem_Click" Tag="СПРАВОЧНИКИ"/>
-                    <TextBlock Text="Характеристики" Foreground="White" FontSize="11" Margin="30,4,0,0" Cursor="Hand" MouseLeftButtonUp="SidebarItem_Click" Tag="СПРАВОЧНИКИ"/>
-                    <TextBlock Text="Параметры проверок" Foreground="White" FontSize="11" Margin="30,4,0,0" Cursor="Hand" MouseLeftButtonUp="SidebarItem_Click" Tag="СПРАВОЧНИКИ"/>
-                    <TextBlock Text="Балансодержатели" Foreground="White" FontSize="11" Margin="30,4,0,0" Cursor="Hand" MouseLeftButtonUp="SidebarItem_Click" Tag="СПРАВОЧНИКИ"/>
-                </StackPanel>
 
-                <!-- ОБМЕН ДАННЫМИ -->
-                <StackPanel Margin="0,0,0,15">
-                    <StackPanel Orientation="Horizontal" Margin="10,0,0,0">
-                        <Image Source="/Resources/swap_icon.png" Width="20" Height="20" Margin="0,0,10,0"/>
-                        <TextBlock Text="ОБМЕН ДАННЫМИ" Foreground="Orange" FontWeight="Bold" FontSize="12" VerticalAlignment="Center"/>
+                    <!-- ОБМЕН ДАННЫМИ -->
+                    <StackPanel Margin="0,0,0,15">
+                        <StackPanel Orientation="Horizontal" Margin="10,0,0,0">
+                            <Image Source="/Resources/swap_icon.png" Width="20" Height="20" Margin="0,0,10,0"/>
+                            <TextBlock Text="ОБМЕН ДАННЫМИ" Foreground="Orange" FontWeight="Bold" FontSize="12" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <TextBlock Text="Импорт" Foreground="White" FontSize="11" Margin="30,8,0,0" Cursor="Hand" MouseLeftButtonUp="SidebarItem_Click" Tag="ОБМЕН ДАННЫМИ"/>
+                        <TextBlock Text="Экспорт" Foreground="White" FontSize="11" Margin="30,4,0,0" Cursor="Hand" MouseLeftButtonUp="SidebarItem_Click" Tag="ОБМЕН ДАННЫМИ"/>
                     </StackPanel>
-                    <TextBlock Text="Импорт" Foreground="White" FontSize="11" Margin="30,8,0,0" Cursor="Hand" MouseLeftButtonUp="SidebarItem_Click" Tag="ОБМЕН ДАННЫМИ"/>
-                    <TextBlock Text="Экспорт" Foreground="White" FontSize="11" Margin="30,4,0,0" Cursor="Hand" MouseLeftButtonUp="SidebarItem_Click" Tag="ОБМЕН ДАННЫМИ"/>
+
+                    <!-- ✅ КНОПКА ПЕРЕКЛЮЧЕНИЯ ТЕМЫ (с иконкой) -->
+                    <Border Margin="30,0.01,10,10">
+                        <Button x:Name="ThemeToggleButton" 
+                        Width="60" Height="60"
+                        Background="{x:Null}" BorderBrush="{x:Null}"
+                        Click="ThemeToggle_Click" Cursor="Hand"
+                        HorizontalAlignment="Left"
+                        ToolTip="Переключить тему">
+
+                            <!-- Картинка внутри кнопки -->
+                            <Image x:Name="ThemeIcon" Source="/Resources/moon_icon.png" Width="24" Height="24"/>
+                        </Button>
+                    </Border>
+
                 </StackPanel>
-
-                <!-- ✅ КНОПКА ПЕРЕКЛЮЧЕНИЯ ТЕМЫ (с иконкой) -->
-                <Border Margin="30,0.01,10,10">
-                    <Button x:Name="ThemeToggleButton" 
-            Width="60" Height="60"
-            Background="{x:Null}" BorderBrush="{x:Null}"
-            Click="ThemeToggle_Click" Cursor="Hand"
-            HorizontalAlignment="Left"
-            ToolTip="Переключить тему">
-
-                        <!-- Картинка внутри кнопки -->
-                        <Image x:Name="ThemeIcon" Source="/Resources/moon_icon.png" Width="24" Height="24"/>
-                    </Button>
-                </Border>
-
-            </StackPanel>
+            </ScrollViewer>
         </Border>
         <!-- ==================== КОНЕЦ БОКОВОГО МЕНЮ ==================== -->
 

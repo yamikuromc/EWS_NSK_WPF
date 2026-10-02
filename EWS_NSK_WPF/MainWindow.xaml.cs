@@ -1,206 +1,28 @@
 ﻿using System;
+using System.Data;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 
 namespace EWS_NSK_WPF
 {
     public partial class MainWindow : Window
     {
-        // === Состояние авторизации ===
+        // Переменные для хранения данных текущего пользователя
         private bool isAuthorized = false;
         private string currentUserFullName = "Гость";
         private string currentUserPosition = "Гость";
+        private bool isDarkTheme = false;
 
         public MainWindow()
         {
             InitializeComponent();
+            UpdateGreeting();
         }
 
-        // === ОБРАБОТЧИК КЛИКА ПО ПЛИТКЕ ===
-        // === ОБРАБОТЧИК КЛИКА ПО ПЛИТКЕ ===
-        private void Tile_Click(object sender, MouseButtonEventArgs e)
-        {
-            if (!EnsureAuthorized()) return;
-
-            if (sender is FrameworkElement element && element.Tag is string title)
-            {
-                string accessLevel = GetCurrentUserAccessLevel();
-
-                switch (title)
-                {
-                    case "КАРТА ПГ":
-                        new MapWindow(currentUserFullName, currentUserPosition, accessLevel, WindowMode.View) { Owner = this }.ShowDialog();
-                        break;
-                    case "ЖУРНАЛЫ":
-                        new JournalsWindow(currentUserFullName, currentUserPosition, accessLevel, WindowMode.View) { Owner = this }.ShowDialog();
-                        break;
-                    case "ОТЧЁТЫ":
-                        new ReportsWindow(currentUserFullName, currentUserPosition, accessLevel, WindowMode.View) { Owner = this }.ShowDialog();
-                        break;
-                    case "ПЛАНШЕТ ИНППВ":
-                        new TabletWindow(currentUserFullName, currentUserPosition, accessLevel, WindowMode.View) { Owner = this }.ShowDialog();
-                        break;
-                    case "СПРАВОЧНИКИ":
-                        new ReferencesWindow(currentUserFullName, currentUserPosition, accessLevel, WindowMode.View) { Owner = this }.ShowDialog();
-                        break;
-                    case "ОБМЕН ДАННЫМИ":
-                        new ExchangeWindow(currentUserFullName, currentUserPosition, accessLevel, WindowMode.View) { Owner = this }.ShowDialog();
-                        break;
-                    default:
-                        MessageBox.Show($"Раздел \"{title}\" пока не реализован.", "Раздел системы",
-                            MessageBoxButton.OK, MessageBoxImage.Information);
-                        break;
-                }
-            }
-        }
-
-        // === ОБРАБОТЧИК КЛИКА ПО ПУНКТАМ БОКОВОГО МЕНЮ ===
-        private void SidebarItem_Click(object sender, MouseButtonEventArgs e)
-        {
-            if (!EnsureAuthorized()) return;
-
-            if (sender is System.Windows.Controls.TextBlock textBlock && textBlock.Tag is string title)
-            {
-                string text = textBlock.Text;
-                string accessLevel = GetCurrentUserAccessLevel();
-
-                WindowMode mode;
-
-                // Определяем режим ПО ТЕКСТУ подпункта (честно передаём запрос пользователя)
-                if (text == "Просмотр")
-                {
-                    mode = WindowMode.View;
-                }
-                else if (text == "Редактирование" || text == "Формирование" || text == "Экспорт" ||
-                         text == "Учёт ИНППВ" || text == "Проверки ПГ")
-                {
-                    // Эти пункты подразумевают редактирование — всегда передаём Edit
-                    // Окно само проверит роль и покажет предупреждение если нужно
-                    mode = WindowMode.Edit;
-                }
-                else
-                {
-                    // Функциональные подпункты (По территории, Импорт и т.д.)
-                    // Для админов — Edit, для операторов — View (без предупреждения, это их естественный режим)
-                    mode = (accessLevel == "Operator") ? WindowMode.View : WindowMode.Edit;
-                }
-
-                switch (title)
-                {
-                    case "КАРТА ПГ":
-                        new MapWindow(currentUserFullName, currentUserPosition, accessLevel, mode) { Owner = this }.ShowDialog();
-                        break;
-                    case "ЖУРНАЛЫ":
-                        new JournalsWindow(currentUserFullName, currentUserPosition, accessLevel, mode) { Owner = this }.ShowDialog();
-                        break;
-                    case "ОТЧЁТЫ":
-                        new ReportsWindow(currentUserFullName, currentUserPosition, accessLevel, mode) { Owner = this }.ShowDialog();
-                        break;
-                    case "ПЛАНШЕТ ИНППВ":
-                        new TabletWindow(currentUserFullName, currentUserPosition, accessLevel, mode) { Owner = this }.ShowDialog();
-                        break;
-                    case "СПРАВОЧНИКИ":
-                        new ReferencesWindow(currentUserFullName, currentUserPosition, accessLevel, mode) { Owner = this }.ShowDialog();
-                        break;
-                    case "ОБМЕН ДАННЫМИ":
-                        new ExchangeWindow(currentUserFullName, currentUserPosition, accessLevel, mode) { Owner = this }.ShowDialog();
-                        break;
-                }
-            }
-        }
-
-        // === ОБРАБОТЧИК КЛИКА ПО КНОПКЕ "ВЫХОД" ===
-        private void Exit_Click(object sender, MouseButtonEventArgs e)
-        {
-            this.Close();
-        }
-
-        // === ОБРАБОТЧИК КЛИКА ПО COMBOBOX "ПОЛЬЗОВАТЕЛЬ" ===
-        private void UserStatusCombo_DropDownOpened(object sender, EventArgs e)
-        {
-            if (!isAuthorized)
-            {
-                UserStatusCombo.IsDropDownOpen = false;
-
-                AuthWindow authWindow = new AuthWindow();
-                authWindow.Owner = this;
-
-                if (authWindow.ShowDialog() == true)
-                {
-                    isAuthorized = true;
-                    currentUserFullName = authWindow.AuthorizedFullName;
-                    currentUserPosition = authWindow.AuthorizedPosition;
-
-                    UserStatusCombo.Items.Clear();
-                    UserStatusCombo.Items.Add(currentUserPosition);
-                    UserStatusCombo.SelectedIndex = 0;
-                    UpdateGreeting(); 
-
-                    MessageBox.Show($"Добро пожаловать, {currentUserFullName}!\nДолжность: {currentUserPosition}",
-                                   "Авторизация выполнена",
-                                   MessageBoxButton.OK,
-                                   MessageBoxImage.Information);
-                }
-            }
-            else
-            {
-                UserStatusCombo.IsDropDownOpen = false;
-            }
-        }
-
-        // === ОБРАБОТЧИК КЛИКА ПО COMBOBOX "ТЕРРИТОРИЯ" ===
-        private void TerritoryCombo_DropDownOpened(object sender, EventArgs e)
-        {
-            if (!isAuthorized)
-            {
-                TerritoryCombo.IsDropDownOpen = false;
-                EnsureAuthorized();
-            }
-        }
-
-        // === ПРОВЕРКА АВТОРИЗАЦИИ ===
-        private bool EnsureAuthorized()
-        {
-            // Если пользователь еще не вошел в систему
-            if (!isAuthorized)
-            {
-                AuthWindow authWindow = new AuthWindow();
-
-                // Показываем окно авторизации
-                if (authWindow.ShowDialog() == true)
-                {
-                    // Сохраняем данные вошедшего пользователя
-                    isAuthorized = true;
-                    currentUserFullName = authWindow.AuthorizedFullName;
-                    currentUserPosition = authWindow.AuthorizedPosition;
-
-                    // Обновляем ComboBox в боковом меню
-                    UserStatusCombo.Items.Clear();
-                    UserStatusCombo.Items.Add(currentUserPosition);
-                    UserStatusCombo.SelectedIndex = 0;
-
-                    // ✅ ВОТ ЭТУ СТРОЧКУ НУЖНО ДОБАВИТЬ!
-                    UpdateGreeting();
-                }
-            }
-
-            // Возвращаем true, если авторизован, иначе false
-            return isAuthorized;
-        }
-
-        // Вспомогательный метод для получения уровня доступа текущего пользователя
-        private string GetCurrentUserAccessLevel()
-        {
-            // В реальном проекте это будет делать Repository, но пока берем из нашего словаря
-            // Мы ищем пользователя по его должности (Position), так как имя мы уже знаем
-            // Для простоты теста, если это yamikuroMC или madara - вернем MainAdmin и т.д.
-
-            if (currentUserPosition == "Главный Администратор") return "MainAdmin";
-            if (currentUserPosition == "Администратор подразделения ГПС") return "UnitAdmin";
-            return "Operator";
-        }
-
+        // === ПРИВЕТСТВИЕ ПО ВРЕМЕНИ СУТОК ===
         private void UpdateGreeting()
         {
             int hour = DateTime.Now.Hour;
@@ -218,9 +40,30 @@ namespace EWS_NSK_WPF
             GreetingLabel.Text = $"{timeOfDay}, {currentUserFullName}!";
         }
 
-        // === ПЕРЕКЛЮЧЕНИЕ ТЕМЫ ===
-        private bool isDarkTheme = false;
+        // === ПРОВЕРКА АВТОРИЗАЦИИ (ОХРАННИК) ===
+        private bool EnsureAuthorized()
+        {
+            if (!isAuthorized)
+            {
+                AuthWindow authWindow = new AuthWindow();
 
+                if (authWindow.ShowDialog() == true)
+                {
+                    isAuthorized = true;
+                    currentUserFullName = authWindow.AuthorizedFullName;
+                    currentUserPosition = authWindow.AuthorizedPosition;
+
+                    UserStatusCombo.Items.Clear();
+                    UserStatusCombo.Items.Add(currentUserPosition);
+                    UserStatusCombo.SelectedIndex = 0;
+
+                    UpdateGreeting();
+                }
+            }
+            return isAuthorized;
+        }
+
+        // === ПЕРЕКЛЮЧЕНИЕ ТЕМЫ ===
         private void ThemeToggle_Click(object sender, RoutedEventArgs e)
         {
             isDarkTheme = !isDarkTheme;
@@ -231,34 +74,158 @@ namespace EWS_NSK_WPF
         {
             if (isDarkTheme)
             {
-                // --- ТЁМНАЯ ТЕМА ---
                 DarkOverlay.Opacity = 0.75;
                 SidebarBorder.Background = new SolidColorBrush(Color.FromArgb(230, 10, 10, 15));
                 HeaderBorder.Background = new SolidColorBrush(Color.FromArgb(210, 10, 10, 15));
                 FooterBorder.Background = new SolidColorBrush(Color.FromArgb(230, 5, 5, 10));
-
-                // Делаем плитки полупрозрачными (60% от исходной яркости)
                 TilesContainer.Opacity = 0.6;
-
-                // Меняем иконку на СОЛНЦЕ
-                ThemeIcon.Source = new System.Windows.Media.Imaging.BitmapImage(new Uri("pack://application:,,,/Resources/sun_icon.png"));
+                ThemeIcon.Source = new BitmapImage(new Uri("pack://application:,,,/Resources/sun_icon.png"));
                 ThemeToggleButton.ToolTip = "Включить светлую тему";
             }
             else
             {
-                // --- СВЕТЛАЯ ТЕМА ---
                 DarkOverlay.Opacity = 0;
                 SidebarBorder.Background = new SolidColorBrush(Color.FromArgb(200, 0, 40, 100));
                 HeaderBorder.Background = new SolidColorBrush(Color.FromArgb(180, 0, 20, 60));
                 FooterBorder.Background = new SolidColorBrush(Color.FromArgb(180, 0, 0, 0));
-
-                // Возвращаем плиткам полную яркость
                 TilesContainer.Opacity = 1.0;
-
-                // Меняем иконку на ЛУНУ
-                ThemeIcon.Source = new System.Windows.Media.Imaging.BitmapImage(new Uri("pack://application:,,,/Resources/moon_icon.png"));
+                ThemeIcon.Source = new BitmapImage(new Uri("pack://application:,,,/Resources/moon_icon.png"));
                 ThemeToggleButton.ToolTip = "Включить тёмную тему";
             }
+        }
+
+        // === КЛИК ПО ПЛИТКАМ ===
+        private void Tile_Click(object sender, MouseButtonEventArgs e)
+        {
+            Border clickedTile = sender as Border;
+            if (clickedTile == null) return;
+
+            string tag = clickedTile.Tag?.ToString();
+
+            if (tag == "КАРТА ПГ")
+            {
+                if (EnsureAuthorized())
+                {
+                    MapWindow mapWindow = new MapWindow(currentUserFullName, currentUserPosition, "г. Новосибирск", WindowMode.View);
+                    mapWindow.Owner = this;
+                    mapWindow.Show();
+                }
+            }
+            else if (tag == "ЖУРНАЛЫ")
+            {
+                if (EnsureAuthorized())
+                {
+                    JournalsWindow journalsWindow = new JournalsWindow(currentUserFullName, currentUserPosition, "г. Новосибирск", WindowMode.View);
+                    journalsWindow.Owner = this;
+                    journalsWindow.Show();
+                }
+            }
+            else if (tag == "ОТЧЁТЫ")
+            {
+                if (EnsureAuthorized())
+                {
+                    ReportsWindow reportsWindow = new ReportsWindow(currentUserFullName, currentUserPosition, "г. Новосибирск", WindowMode.View);
+                    reportsWindow.Owner = this;
+                    reportsWindow.Show();
+                }
+            }
+            else if (tag == "ПЛАНШЕТ ИНППВ")
+            {
+                if (EnsureAuthorized())
+                {
+                    TabletWindow tabletWindow = new TabletWindow(currentUserFullName, currentUserPosition, "г. Новосибирск", WindowMode.View);
+                    tabletWindow.Owner = this;
+                    tabletWindow.Show();
+                }
+            }
+            else if (tag == "СПРАВОЧНИКИ")
+            {
+                if (EnsureAuthorized())
+                {
+                    ReferencesWindow refWindow = new ReferencesWindow();
+                    refWindow.Owner = this;
+                    refWindow.Show();
+                }
+            }
+            else if (tag == "ОБМЕН ДАННЫМИ")
+            {
+                if (EnsureAuthorized())
+                {
+                    ExchangeWindow exchangeWindow = new ExchangeWindow(currentUserFullName, currentUserPosition, "г. Новосибирск", WindowMode.View);
+                    exchangeWindow.Owner = this;
+                    exchangeWindow.Show();
+                }
+            }
+        }
+
+
+        // === КЛИК ПО ПУНКТАМ БОКОВОГО МЕНЮ ===
+        private void SidebarItem_Click(object sender, MouseButtonEventArgs e)
+        {
+            TextBlock clickedItem = sender as TextBlock;
+            if (clickedItem == null) return;
+
+            string tag = clickedItem.Tag?.ToString();
+            string text = clickedItem.Text;
+
+            // Если кликнули на любой пункт в разделе СПРАВОЧНИКИ
+            if (tag == "СПРАВОЧНИКИ")
+            {
+                if (!EnsureAuthorized()) return;
+
+                ReferencesWindow refWindow = new ReferencesWindow();
+                refWindow.Owner = this;
+
+                // Логика: какой пункт меню -> какую таблицу открыть
+                // Имена таблиц должны точно совпадать с теми, что в базе SQLite!
+
+                if (text == "Подразделения ППС")
+                {
+                    refWindow.LoadTable("tbl_Fire3_Unit", "Подразделения ППС");
+                }
+                else if (text == "Адресные объекты")
+                {
+                    refWindow.LoadTable("tbl_RS4_AddressObject", "Адресные объекты");
+                }
+                else if (text == "Характеристики")
+                {
+                    // Пока не знаем точное имя таблицы, используем tbl_EWS_Type как заглушку
+                    refWindow.LoadTable("tbl_EWS_Type", "Характеристики");
+                }
+                else if (text == "Параметры проверок")
+                {
+                    refWindow.LoadTable("tbl_CheckEWS_StatusEWS", "Параметры проверок");
+                }
+                else if (text == "Балансодержатели")
+                {
+                    refWindow.LoadTable("tbl_EWS_Owner", "Балансодержатели");
+                }
+                else
+                {
+                    // Если кликнули на что-то другое в разделе Справочники
+                    refWindow.LoadTable("tbl_EWS_Type", "Справочник");
+                }
+
+                refWindow.Show();
+            }
+            // Здесь потом добавим логику для других разделов (КАРТА ПГ, ЖУРНАЛЫ и т.д.)
+        }
+
+        // === ОБРАБОТЧИКИ ДЛЯ COMBOBOX (пока заглушки) ===
+        private void UserStatusCombo_DropDownOpened(object sender, EventArgs e)
+        {
+            // Пока ничего не делаем, позже добавим логику смены пользователя
+        }
+
+        private void TerritoryCombo_DropDownOpened(object sender, EventArgs e)
+        {
+            // Пока ничего не делаем, позже добавим логику смены территории
+        }
+
+        // === ВЫХОД ===
+        private void Exit_Click(object sender, MouseButtonEventArgs e)
+        {
+            Application.Current.Shutdown();
         }
     }
 }

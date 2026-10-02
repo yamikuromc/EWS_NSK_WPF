@@ -25,6 +25,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.12" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Resource Include="Resources\exit.png" />
   </ItemGroup>
 
@@ -41,6 +45,12 @@
     <Resource Include="Resources\swap_icon.png" />
     <Resource Include="Resources\tablet_icon.png" />
     <Resource Include="Resources\tile_frame.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="INPPV.db">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>
