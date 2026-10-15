@@ -3,6 +3,10 @@ using System.Collections.Generic;
 using System.Data;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Threading;
+using System.Threading.Tasks;
 
 namespace EWS_NSK_WPF
 {
@@ -10,120 +14,144 @@ namespace EWS_NSK_WPF
     {
         // СЛОВАРЬ: имя таблицы → (имя колонки в БД → русское название)
         private static readonly Dictionary<string, Dictionary<string, string>> ColumnTranslations =
-    new Dictionary<string, Dictionary<string, string>>
-    {
-        // Таблица типов ИНППВ (гидранты, водоемы, краны...)
-        ["tbl_EWS_Type"] = new Dictionary<string, string>
-        {
-            ["Type_ID"] = "№",
-            ["Type_NameShort"] = "Тип / Сокращение",
-            ["Type_Note"] = "Описание",
-            ["Type_Name"] = "Полное название"
-        },
+            new Dictionary<string, Dictionary<string, string>>
+            {
+                ["tbl_EWS_Type"] = new Dictionary<string, string>
+                {
+                    ["Type_ID"] = "№",
+                    ["Type_NameShort"] = "Тип / Сокращение",
+                    ["Type_Note"] = "Описание",
+                    ["Type_Name"] = "Полное название"
+                },
 
-        // Таблица подразделений пожарной охраны
-        ["tbl_Fire3_Unit"] = new Dictionary<string, string>
-        {
-            ["Unit_LFG_COD"] = "Код гарнизона",
-            ["Unit_ID"] = "№",
-            ["Unit_ShortName"] = "Сокращённое название",
-            ["Unit_FullName"] = "Полное название",
-            ["Unit_FullAddress"] = "Полный адрес",
-            ["Unit_City_COD"] = "Код города",
-            ["Unit_Locality_COD"] = "Код населённого пункта",
-            ["Unit_District_COD"] = "Код района",
-            ["Unit_AddressObject_COD"] = "Код адресного объекта",
-            ["Unit_HouseNumber"] = "Номер дома",
-            ["FireUnit_X"] = "Координата X",
-            ["FireUnit_Y"] = "Координата Y",
-            ["Unit_MunAddress"] = "Муниципальный адрес",
-            ["Unit_AdmAddress"] = "Административный адрес"
-        },
+                ["tbl_Fire3_Unit"] = new Dictionary<string, string>
+                {
+                    ["Unit_LFG_COD"] = "Код гарнизона",
+                    ["Unit_ID"] = "№",
+                    ["Unit_ShortName"] = "Сокращённое название",
+                    ["Unit_FullName"] = "Полное название",
+                    ["Unit_FullAddress"] = "Полный адрес",
+                    ["Unit_City_COD"] = "Код города",
+                    ["Unit_Locality_COD"] = "Код населённого пункта",
+                    ["Unit_District_COD"] = "Код района",
+                    ["Unit_AddressObject_COD"] = "Код адресного объекта",
+                    ["Unit_HouseNumber"] = "Номер дома",
+                    ["FireUnit_X"] = "Координата X",
+                    ["FireUnit_Y"] = "Координата Y",
+                    ["Unit_MunAddress"] = "Муниципальный адрес",
+                    ["Unit_AdmAddress"] = "Административный адрес"
+                },
 
-        // Таблица адресных объектов (улицы, переулки)
-        ["tbl_RS4_AddressObject"] = new Dictionary<string, string>
-        {
-            ["AddressObject_District_COD"] = "Код района",
-            ["AddressObject_ID"] = "ID объекта",
-            ["AddressObject_Name"] = "Название",
-            ["AddressObject_Adm"] = "Административный адрес",
-            ["AddressObject_Mun"] = "Муниципальный адрес",
-            ["AddressObject_X"] = "Координата X",
-            ["AddressObject_Y"] = "Координата Y",
-            ["AddressObject_Display"] = "Отображаемое название",
-            ["AddressObject_Unit_COD"] = "Код подразделения",
-            ["AddressObject_LevelZone1"] = "Уровень зоны 1",
-            ["AddressObject_LevelZone2"] = "Уровень зоны 2"
-        },
+                ["tbl_RS4_AddressObject"] = new Dictionary<string, string>
+                {
+                    ["AddressObject_District_COD"] = "Код района",
+                    ["AddressObject_ID"] = "ID объекта",
+                    ["AddressObject_Name"] = "Название",
+                    ["AddressObject_Adm"] = "Административный адрес",
+                    ["AddressObject_Mun"] = "Муниципальный адрес",
+                    ["AddressObject_X"] = "Координата X",
+                    ["AddressObject_Y"] = "Координата Y",
+                    ["AddressObject_Display"] = "Отображаемое название",
+                    ["AddressObject_Unit_COD"] = "Код подразделения",
+                    ["AddressObject_LevelZone1"] = "Уровень зоны 1",
+                    ["AddressObject_LevelZone2"] = "Уровень зоны 2"
+                },
 
-        // ✅ ИСПРАВЛЕНО: Таблица балансодержателей (ТОЧНЫЕ имена из скриншота)
-        ["tbl_EWS_Owner"] = new Dictionary<string, string>
-        {
-            ["Owner_ID"] = "№",
-            ["Owner_NameShort"] = "Краткое название",
-            ["Owner_NameFull"] = "Полное название",
-            ["Owner_Address"] = "Адрес",
-            ["Owner_PostAddress"] = "Почтовый адрес",
-            ["Owner_Unit_COD"] = "Код подразделения"
-        },
+                ["tbl_EWS_Owner"] = new Dictionary<string, string>
+                {
+                    ["Owner_ID"] = "№",
+                    ["Owner_NameShort"] = "Краткое название",
+                    ["Owner_NameFull"] = "Полное название",
+                    ["Owner_Address"] = "Адрес",
+                    ["Owner_PostAddress"] = "Почтовый адрес",
+                    ["Owner_Unit_COD"] = "Код подразделения"
+                },
 
-        // ✅ ИСПРАВЛЕНО: Таблица статусов проверок (ТОЧНЫЕ имена из скриншота)
-        ["tbl_CheckEWS_StatusEWS"] = new Dictionary<string, string>
+                ["tbl_CheckEWS_StatusEWS"] = new Dictionary<string, string>
+                {
+                    ["StatusEWS_ID"] = "№",
+                    ["StatusEWS_Name"] = "Название статуса",
+                    ["StatusEWS_Note"] = "Описание"
+                }
+            };
+
+        // Словарь для отображаемых названий справочников
+        private static readonly Dictionary<string, string> ReferenceTitles = new Dictionary<string, string>
         {
-            ["StatusEWS_ID"] = "№",
-            ["StatusEWS_Name"] = "Название статуса",
-            ["StatusEWS_Note"] = "Описание"
-        }
-    };
+            ["tbl_Fire3_Unit"] = "Подразделения ППС",
+            ["tbl_RS4_AddressObject"] = "Адресные объекты",
+            ["tbl_EWS_Type"] = "Характеристики",
+            ["tbl_CheckEWS_StatusEWS"] = "Параметры проверок",
+            ["tbl_EWS_Owner"] = "Балансодержатели"
+        };
+
+        private string currentTableName = "";
 
         public ReferencesWindow()
         {
             InitializeComponent();
             UserInfoLabel.Text = "Режим: Просмотр справочных данных";
             PermissionsLabel.Text = "Данные загружаются из локальной базы SQLite";
+
+            // Загружаем первый справочник ПОСЛЕ полной загрузки окна
+            this.Loaded += (s, e) => LoadTable("tbl_Fire3_Unit", "Подразделения ППС");
         }
 
-        // Метод загрузки таблицы с русскими заголовками
+        // Метод загрузки таблицы (вызывается из MainWindow при клике в боковом меню)
         public void LoadTable(string tableName, string titleName)
         {
+            currentTableName = tableName;
             this.Title = $"Справочник: {titleName}";
+            LoadData(tableName);
+        }
 
+        // Обработчик клика по кнопке в левой панели
+        private void ReferenceItem_Click(object sender, RoutedEventArgs e)
+        {
+            Button clickedButton = sender as Button;
+            if (clickedButton == null) return;
+
+            string tableName = clickedButton.Tag?.ToString();
+            if (string.IsNullOrEmpty(tableName)) return;
+
+            // Получаем название справочника из словаря
+            string titleName = ReferenceTitles.ContainsKey(tableName)
+                ? ReferenceTitles[tableName]
+                : tableName;
+
+            LoadTable(tableName, titleName);
+
+            // ВАЖНО: помечаем событие как обработанное
+            e.Handled = true;
+        }
+        // Внутренний метод загрузки данных (асинхронный)
+        private async void LoadData(string tableName)
+        {
             try
             {
-                DataTable data = DatabaseHelper.GetTableData(tableName);
+                // Показываем индикатор загрузки
+                ReferenceDataGrid.IsEnabled = false;
+                ReferenceDataGrid.Opacity = 0.5;
+
+                // Загружаем данные в фоновом потоке
+                DataTable data = await Task.Run(() => DatabaseHelper.GetTableData(tableName));
 
                 if (data != null && data.Rows.Count > 0)
                 {
-                    // Очищаем существующие колонки
-                    ReferenceDataGrid.Columns.Clear();
-
-                    // Создаём колонки вручную на основе переименованных
-                    foreach (DataColumn column in data.Columns)
+                    // Переименовываем колонки на русский
+                    if (ColumnTranslations.ContainsKey(tableName))
                     {
-                        string columnName = column.ColumnName;
-                        string displayName = columnName;
-
-                        // Если есть перевод, используем его
-                        if (ColumnTranslations.ContainsKey(tableName))
+                        var translations = ColumnTranslations[tableName];
+                        foreach (DataColumn column in data.Columns)
                         {
-                            var translations = ColumnTranslations[tableName];
-                            if (translations.ContainsKey(columnName))
+                            if (translations.ContainsKey(column.ColumnName))
                             {
-                                displayName = translations[columnName];
+                                column.ColumnName = translations[column.ColumnName];
                             }
                         }
-
-                        // Создаём колонку DataGrid
-                        DataGridTextColumn dgColumn = new DataGridTextColumn
-                        {
-                            Header = displayName,
-                            Binding = new System.Windows.Data.Binding(columnName),
-                            IsReadOnly = true
-                        };
-
-                        ReferenceDataGrid.Columns.Add(dgColumn);
                     }
 
+                    // Устанавливаем данные
                     ReferenceDataGrid.ItemsSource = data.DefaultView;
                 }
                 else
@@ -136,6 +164,12 @@ namespace EWS_NSK_WPF
             {
                 MessageBox.Show($"Ошибка загрузки данных: {ex.Message}",
                     "Ошибка базы данных", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                // Возвращаем DataGrid в рабочее состояние
+                ReferenceDataGrid.IsEnabled = true;
+                ReferenceDataGrid.Opacity = 1.0;
             }
         }
 

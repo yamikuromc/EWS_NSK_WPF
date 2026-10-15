@@ -25,17 +25,14 @@
                Source="/Resources/background.png" 
                Stretch="UniformToFill"/>
 
-        <!-- ТЁМНЫЙ СЛОЙ (по умолчанию прозрачный) -->
+        <!-- ТЁМНЫЙ СЛОЙ -->
         <Rectangle x:Name="DarkOverlay" Grid.Row="0" Grid.Column="0" Grid.RowSpan="3" Grid.ColumnSpan="2" 
                    Fill="Black" Opacity="0" IsHitTestVisible="False"/>
 
-        <!-- ==================== БОКОВОЕ МЕНЮ (С УМНЫМ ПОЛЗУНКОМ) ==================== -->
+        <!-- БОКОВОЕ МЕНЮ -->
         <Border x:Name="SidebarBorder" Grid.Row="0" Grid.RowSpan="3" Grid.Column="0" Background="#C8002864">
-            <!-- ScrollViewer с Auto - ползунок появится только если контент не влезает -->
             <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                 <StackPanel Margin="0,15,0,15">
-
-                    <!-- Логотип -->
                     <Image Source="/Resources/logo.png" Width="110" Height="110" Margin="0,0,0,20" Stretch="Uniform" HorizontalAlignment="Center"/>
 
                     <!-- НАСТРОЙКИ -->
@@ -77,7 +74,7 @@
                         <TextBlock Text="Проверки ПГ" Foreground="White" FontSize="11" Margin="30,4,0,0" Cursor="Hand" MouseLeftButtonUp="SidebarItem_Click" Tag="ЖУРНАЛЫ"/>
                     </StackPanel>
 
-                    <!-- ОТЧЁТЫ по ИНППВ -->
+                    <!-- ОТЧЁТЫ -->
                     <StackPanel Margin="0,0,0,15">
                         <StackPanel Orientation="Horizontal" Margin="10,0,0,0">
                             <Image Source="/Resources/report_icon.png" Width="20" Height="20" Margin="0,0,10,0"/>
@@ -121,24 +118,10 @@
                         <TextBlock Text="Экспорт" Foreground="White" FontSize="11" Margin="30,4,0,0" Cursor="Hand" MouseLeftButtonUp="SidebarItem_Click" Tag="ОБМЕН ДАННЫМИ"/>
                     </StackPanel>
 
-                    <!-- ✅ КНОПКА ПЕРЕКЛЮЧЕНИЯ ТЕМЫ (с иконкой) -->
-                    <Border Margin="30,0.01,10,10">
-                        <Button x:Name="ThemeToggleButton" 
-                        Width="60" Height="60"
-                        Background="{x:Null}" BorderBrush="{x:Null}"
-                        Click="ThemeToggle_Click" Cursor="Hand"
-                        HorizontalAlignment="Left"
-                        ToolTip="Переключить тему">
-
-                            <!-- Картинка внутри кнопки -->
-                            <Image x:Name="ThemeIcon" Source="/Resources/moon_icon.png" Width="24" Height="24"/>
-                        </Button>
-                    </Border>
-
+                   
                 </StackPanel>
             </ScrollViewer>
         </Border>
-        <!-- ==================== КОНЕЦ БОКОВОГО МЕНЮ ==================== -->
 
         <!-- ШАПКА -->
         <Border x:Name="HeaderBorder" Grid.Row="0" Grid.Column="1" Background="#B400143C">
@@ -146,12 +129,23 @@
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
+
+                <!-- Заголовок -->
                 <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="40,0,0,0">
                     <TextBlock Text="ГЕОИНФОРМАЦИОННАЯ СИСТЕМА" FontSize="26" FontWeight="Bold" Foreground="White"/>
                     <TextBlock Text="ИНППВ г. Новосибирска и Новосибирского района НСО" FontSize="14" Foreground="White" Margin="0,5,0,0"/>
                 </StackPanel>
-                <TextBlock Grid.Column="1" Text="v. 2026" FontSize="14" Foreground="White" TextDecorations="Underline" Margin="0,0,30,0" VerticalAlignment="Center"/>
+
+                <!-- Кнопка переключения темы -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,20,0" Cursor="Hand" MouseLeftButtonUp="ThemeToggle_Click">
+                    <Image x:Name="ThemeIcon" Source="/Resources/moon_icon_hd.jpg" Width="32" Height="32" Margin="0,0,10,0"/>
+                    <TextBlock x:Name="ThemeLabel" Text="Тёмная тема" FontSize="14" Foreground="White" VerticalAlignment="Center"/>
+                </StackPanel>
+
+                <!-- Версия -->
+                <TextBlock Grid.Column="2" Text="v. 2026" FontSize="14" Foreground="White" TextDecorations="Underline" Margin="0,0,30,0" VerticalAlignment="Center"/>
             </Grid>
         </Border>
 
@@ -168,7 +162,7 @@
                 <TextBlock Text="Выберите раздел системы для работы" FontSize="24" Foreground="White" Margin="0,10,0,0"/>
             </StackPanel>
 
-            <!-- СЕТКА ПЛИТОК (обернута в контейнер для управления прозрачностью) -->
+            <!-- СЕТКА ПЛИТОК -->
             <Border x:Name="TilesContainer" Grid.Row="1">
                 <Grid>
                     <Grid.ColumnDefinitions>
@@ -184,114 +178,139 @@
 
                     <!-- ПЛИТКА 1: КАРТА ПГ -->
                     <Border Grid.Row="0" Grid.Column="2" Margin="20,36,20,10" Cursor="Hand" MouseLeftButtonUp="Tile_Click" Tag="КАРТА ПГ">
-                        <Border.Background>
-                            <ImageBrush ImageSource="/Resources/tile_frame.png" Stretch="Fill"/>
-                        </Border.Background>
-                        <Grid Margin="15">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="80"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <Image Grid.Column="0" Source="/Resources/map_icon.png" Width="70" Height="70" Stretch="Uniform" VerticalAlignment="Center"/>
-                            <StackPanel Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center">
-                                <TextBlock Text="КАРТА ПГ" FontSize="18" FontWeight="Bold" Foreground="White" TextWrapping="Wrap"/>
-                                <TextBlock Text="Просмотр и работа с картой пожарных гидрантов" FontSize="11" Foreground="LightGray" Margin="0,5,0,0" TextWrapping="Wrap"/>
-                            </StackPanel>
+                        <Grid>
+                            <Rectangle x:Name="TileMapBackground">
+                                <Rectangle.Fill>
+                                    <ImageBrush ImageSource="/Resources/tile_frame.png" Stretch="Fill"/>
+                                </Rectangle.Fill>
+                            </Rectangle>
+                            <Grid Margin="15">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="80"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Image Grid.Column="0" Source="/Resources/map_icon.png" Width="70" Height="70" Stretch="Uniform" VerticalAlignment="Center"/>
+                                <StackPanel Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center">
+                                    <TextBlock x:Name="TileMapTitle" Text="КАРТА ПГ" FontSize="18" FontWeight="Bold" Foreground="White" TextWrapping="Wrap"/>
+                                    <TextBlock x:Name="TileMapDesc" Text="Просмотр и работа с картой пожарных гидрантов" FontSize="11" Foreground="LightGray" Margin="0,5,0,0" TextWrapping="Wrap"/>
+                                </StackPanel>
+                            </Grid>
                         </Grid>
                     </Border>
 
                     <!-- ПЛИТКА 2: ЖУРНАЛЫ -->
                     <Border Grid.Row="1" Grid.Column="0" Margin="41,20,10,20" Cursor="Hand" MouseLeftButtonUp="Tile_Click" Tag="ЖУРНАЛЫ">
-                        <Border.Background>
-                            <ImageBrush ImageSource="/Resources/tile_frame.png" Stretch="Fill"/>
-                        </Border.Background>
-                        <Grid Margin="15">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="80"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <Image Grid.Column="0" Source="/Resources/journal_icon.png" Width="70" Height="70" Stretch="Uniform" VerticalAlignment="Center"/>
-                            <StackPanel Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center">
-                                <TextBlock Text="ЖУРНАЛЫ" FontSize="18" FontWeight="Bold" Foreground="White" TextWrapping="Wrap"/>
-                                <TextBlock Text="Учёт водоисточников. Проверки пожарных гидрантов" FontSize="11" Foreground="LightGray" Margin="0,5,0,0" TextWrapping="Wrap"/>
-                            </StackPanel>
+                        <Grid>
+                            <Rectangle x:Name="TileJournalsBackground">
+                                <Rectangle.Fill>
+                                    <ImageBrush ImageSource="/Resources/tile_frame.png" Stretch="Fill"/>
+                                </Rectangle.Fill>
+                            </Rectangle>
+                            <Grid Margin="15">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="80"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Image Grid.Column="0" Source="/Resources/journal_icon.png" Width="70" Height="70" Stretch="Uniform" VerticalAlignment="Center"/>
+                                <StackPanel Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center">
+                                    <TextBlock x:Name="TileJournalsTitle" Text="ЖУРНАЛЫ" FontSize="18" FontWeight="Bold" Foreground="White" TextWrapping="Wrap"/>
+                                    <TextBlock x:Name="TileJournalsDesc" Text="Учёт водоисточников. Проверки пожарных гидрантов" FontSize="11" Foreground="LightGray" Margin="0,5,0,0" TextWrapping="Wrap"/>
+                                </StackPanel>
+                            </Grid>
                         </Grid>
                     </Border>
 
                     <!-- ПЛИТКА 3: ОТЧЁТЫ -->
                     <Border Grid.Row="1" Grid.Column="1" Margin="20" Cursor="Hand" MouseLeftButtonUp="Tile_Click" Tag="ОТЧЁТЫ">
-                        <Border.Background>
-                            <ImageBrush ImageSource="/Resources/tile_frame.png" Stretch="Fill"/>
-                        </Border.Background>
-                        <Grid Margin="15">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="80"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <Image Grid.Column="0" Source="/Resources/report_icon.png" Width="70" Height="70" Stretch="Uniform" VerticalAlignment="Center"/>
-                            <StackPanel Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center">
-                                <TextBlock Text="ОТЧЁТЫ" FontSize="18" FontWeight="Bold" Foreground="White" TextWrapping="Wrap"/>
-                                <TextBlock Text="Формирование отчётов по водоисточникам" FontSize="11" Foreground="LightGray" Margin="0,5,0,0" TextWrapping="Wrap"/>
-                            </StackPanel>
+                        <Grid>
+                            <Rectangle x:Name="TileReportsBackground">
+                                <Rectangle.Fill>
+                                    <ImageBrush ImageSource="/Resources/tile_frame.png" Stretch="Fill"/>
+                                </Rectangle.Fill>
+                            </Rectangle>
+                            <Grid Margin="15">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="80"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Image Grid.Column="0" Source="/Resources/report_icon.png" Width="70" Height="70" Stretch="Uniform" VerticalAlignment="Center"/>
+                                <StackPanel Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center">
+                                    <TextBlock x:Name="TileReportsTitle" Text="ОТЧЁТЫ" FontSize="18" FontWeight="Bold" Foreground="White" TextWrapping="Wrap"/>
+                                    <TextBlock x:Name="TileReportsDesc" Text="Формирование отчётов по водоисточникам" FontSize="11" Foreground="LightGray" Margin="0,5,0,0" TextWrapping="Wrap"/>
+                                </StackPanel>
+                            </Grid>
                         </Grid>
                     </Border>
 
                     <!-- ПЛИТКА 4: ПЛАНШЕТ ИНППВ -->
                     <Border Grid.Row="1" Grid.Column="2" Margin="20,20,20,20" Cursor="Hand" MouseLeftButtonUp="Tile_Click" Tag="ПЛАНШЕТ ИНППВ">
-                        <Border.Background>
-                            <ImageBrush ImageSource="/Resources/tile_frame.png" Stretch="Fill"/>
-                        </Border.Background>
-                        <Grid Margin="15">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="80"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <Image Grid.Column="0" Source="/Resources/tablet_icon.png" Width="70" Height="70" Stretch="Uniform" VerticalAlignment="Center"/>
-                            <StackPanel Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center">
-                                <TextBlock Text="ПЛАНШЕТ ИНППВ" FontSize="18" FontWeight="Bold" Foreground="White" TextWrapping="Wrap"/>
-                                <TextBlock Text="Просмотр и формирование справочников" FontSize="11" Foreground="LightGray" Margin="0,5,0,0" TextWrapping="Wrap"/>
-                            </StackPanel>
+                        <Grid>
+                            <Rectangle x:Name="TileTabletBackground">
+                                <Rectangle.Fill>
+                                    <ImageBrush ImageSource="/Resources/tile_frame.png" Stretch="Fill"/>
+                                </Rectangle.Fill>
+                            </Rectangle>
+                            <Grid Margin="15">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="80"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Image Grid.Column="0" Source="/Resources/tablet_icon_hd.png" Width="70" Height="70" Stretch="Uniform" VerticalAlignment="Center"/>
+                                <StackPanel Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center">
+                                    <TextBlock x:Name="TileTabletTitle" Text="ПЛАНШЕТ ИНППВ" FontSize="18" FontWeight="Bold" Foreground="White" TextWrapping="Wrap"/>
+                                    <TextBlock x:Name="TileTabletDesc" Text="Просмотр и формирование справочников" FontSize="11" Foreground="LightGray" Margin="0,5,0,0" TextWrapping="Wrap"/>
+                                </StackPanel>
+                            </Grid>
                         </Grid>
                     </Border>
 
                     <!-- ПЛИТКА 5: СПРАВОЧНИКИ -->
                     <Border Grid.Row="2" Grid.Column="0" Margin="41,20,10,20" Cursor="Hand" MouseLeftButtonUp="Tile_Click" Tag="СПРАВОЧНИКИ">
-                        <Border.Background>
-                            <ImageBrush ImageSource="/Resources/tile_frame.png" Stretch="Fill"/>
-                        </Border.Background>
-                        <Grid Margin="15">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="80"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <Image Grid.Column="0" Source="/Resources/guide_icon.png" Width="70" Height="70" Stretch="Uniform" VerticalAlignment="Center"/>
-                            <StackPanel Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center">
-                                <TextBlock Text="СПРАВОЧНИКИ" FontSize="18" FontWeight="Bold" Foreground="White" TextWrapping="Wrap"/>
-                                <TextBlock Text="Работа со справочниками и классификаторами" FontSize="11" Foreground="LightGray" Margin="0,5,0,0" TextWrapping="Wrap"/>
-                            </StackPanel>
+                        <Grid>
+                            <Rectangle x:Name="TileReferencesBackground">
+                                <Rectangle.Fill>
+                                    <ImageBrush ImageSource="/Resources/tile_frame.png" Stretch="Fill"/>
+                                </Rectangle.Fill>
+                            </Rectangle>
+                            <Grid Margin="15">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="80"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Image Grid.Column="0" Source="/Resources/guide_icon.png" Width="70" Height="70" Stretch="Uniform" VerticalAlignment="Center"/>
+                                <StackPanel Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center">
+                                    <TextBlock x:Name="TileReferencesTitle" Text="СПРАВОЧНИКИ" FontSize="18" FontWeight="Bold" Foreground="White" TextWrapping="Wrap"/>
+                                    <TextBlock x:Name="TileReferencesDesc" Text="Работа со справочниками и классификаторами" FontSize="11" Foreground="LightGray" Margin="0,5,0,0" TextWrapping="Wrap"/>
+                                </StackPanel>
+                            </Grid>
                         </Grid>
                     </Border>
 
                     <!-- ПЛИТКА 6: ОБМЕН ДАННЫМИ -->
                     <Border Grid.Row="2" Grid.Column="1" Margin="20" Cursor="Hand" MouseLeftButtonUp="Tile_Click" Tag="ОБМЕН ДАННЫМИ">
-                        <Border.Background>
-                            <ImageBrush ImageSource="/Resources/tile_frame.png" Stretch="Fill"/>
-                        </Border.Background>
-                        <Grid Margin="15">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="80"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <Image Grid.Column="0" Source="/Resources/swap_icon.png" Width="70" Height="70" Stretch="Uniform" VerticalAlignment="Center"/>
-                            <StackPanel Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center">
-                                <TextBlock Text="ОБМЕН ДАННЫМИ" FontSize="18" FontWeight="Bold" Foreground="White" TextWrapping="Wrap"/>
-                                <TextBlock Text="Импорт и экспорт данных по водоисточникам" FontSize="11" Foreground="LightGray" Margin="0,5,0,0" TextWrapping="Wrap"/>
-                            </StackPanel>
+                        <Grid>
+                            <Rectangle x:Name="TileExchangeBackground">
+                                <Rectangle.Fill>
+                                    <ImageBrush ImageSource="/Resources/tile_frame.png" Stretch="Fill"/>
+                                </Rectangle.Fill>
+                            </Rectangle>
+                            <Grid Margin="15">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="80"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Image Grid.Column="0" Source="/Resources/swap_icon_hd.png" Width="70" Height="70" Stretch="Uniform" VerticalAlignment="Center"/>
+                                <StackPanel Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center">
+                                    <TextBlock x:Name="TileExchangeTitle" Text="ОБМЕН ДАННЫМИ" FontSize="18" FontWeight="Bold" Foreground="White" TextWrapping="Wrap"/>
+                                    <TextBlock x:Name="TileExchangeDesc" Text="Импорт и экспорт данных по водоисточникам" FontSize="11" Foreground="LightGray" Margin="0,5,0,0" TextWrapping="Wrap"/>
+                                </StackPanel>
+                            </Grid>
                         </Grid>
                     </Border>
                 </Grid>
             </Border>
         </Grid>
+
         <!-- ПОДВАЛ -->
         <Border x:Name="FooterBorder" Grid.Row="2" Grid.Column="1" Background="#B4000000">
             <Grid>

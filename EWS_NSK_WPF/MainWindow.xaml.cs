@@ -1,16 +1,17 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Windows.Shapes;
 
 namespace EWS_NSK_WPF
 {
     public partial class MainWindow : Window
     {
-        // Переменные для хранения данных текущего пользователя
         private bool isAuthorized = false;
         private string currentUserFullName = "Гость";
         private string currentUserPosition = "Гость";
@@ -20,9 +21,9 @@ namespace EWS_NSK_WPF
         {
             InitializeComponent();
             UpdateGreeting();
+            ApplyTheme();
         }
 
-        // === ПРИВЕТСТВИЕ ПО ВРЕМЕНИ СУТОК ===
         private void UpdateGreeting()
         {
             int hour = DateTime.Now.Hour;
@@ -40,7 +41,6 @@ namespace EWS_NSK_WPF
             GreetingLabel.Text = $"{timeOfDay}, {currentUserFullName}!";
         }
 
-        // === ПРОВЕРКА АВТОРИЗАЦИИ (ОХРАННИК) ===
         private bool EnsureAuthorized()
         {
             if (!isAuthorized)
@@ -63,7 +63,6 @@ namespace EWS_NSK_WPF
             return isAuthorized;
         }
 
-        // === ПЕРЕКЛЮЧЕНИЕ ТЕМЫ ===
         private void ThemeToggle_Click(object sender, RoutedEventArgs e)
         {
             isDarkTheme = !isDarkTheme;
@@ -78,9 +77,14 @@ namespace EWS_NSK_WPF
                 SidebarBorder.Background = new SolidColorBrush(Color.FromArgb(230, 10, 10, 15));
                 HeaderBorder.Background = new SolidColorBrush(Color.FromArgb(210, 10, 10, 15));
                 FooterBorder.Background = new SolidColorBrush(Color.FromArgb(230, 5, 5, 10));
-                TilesContainer.Opacity = 0.6;
-                ThemeIcon.Source = new BitmapImage(new Uri("pack://application:,,,/Resources/sun_icon.png"));
-                ThemeToggleButton.ToolTip = "Включить светлую тему";
+
+                // В тёмной теме показываем солнце и текст "Светлая тема"
+                ThemeIcon.Source = new BitmapImage(new Uri("pack://application:,,,/Resources/sun_icon_hd.png"));
+                ThemeLabel.Text = "Светлая тема";
+                ThemeLabel.Foreground = new SolidColorBrush(Color.FromRgb(255, 165, 0)); // Оранжевый текст
+
+                ChangeTileBackgroundOpacity(0.6);
+                ChangeTileTextColor(Colors.White);
             }
             else
             {
@@ -88,13 +92,59 @@ namespace EWS_NSK_WPF
                 SidebarBorder.Background = new SolidColorBrush(Color.FromArgb(200, 0, 40, 100));
                 HeaderBorder.Background = new SolidColorBrush(Color.FromArgb(180, 0, 20, 60));
                 FooterBorder.Background = new SolidColorBrush(Color.FromArgb(180, 0, 0, 0));
-                TilesContainer.Opacity = 1.0;
-                ThemeIcon.Source = new BitmapImage(new Uri("pack://application:,,,/Resources/moon_icon.png"));
-                ThemeToggleButton.ToolTip = "Включить тёмную тему";
+
+                // В светлой теме показываем луну и текст "Тёмная тема"
+                ThemeIcon.Source = new BitmapImage(new Uri("pack://application:,,,/Resources/moon_icon_hd.png"));
+                ThemeLabel.Text = "Тёмная тема";
+                ThemeLabel.Foreground = new SolidColorBrush(Colors.White); // Белый текст
+
+                ChangeTileBackgroundOpacity(1.0);
             }
         }
 
-        // === КЛИК ПО ПЛИТКАМ ===
+        // ✅ НОВЫЙ МЕТОД: Меняет прозрачность ТОЛЬКО фона (Rectangle)
+        private void ChangeTileBackgroundOpacity(double opacity)
+        {
+            var backgrounds = new List<System.Windows.Shapes.Rectangle>
+    {
+        TileMapBackground,
+        TileJournalsBackground,
+        TileReportsBackground,
+        TileTabletBackground,
+        TileReferencesBackground,
+        TileExchangeBackground
+    };
+
+            foreach (var bg in backgrounds)
+            {
+                if (bg != null)
+                {
+                    bg.Opacity = opacity;
+                }
+            }
+        }
+        // ✅ СУЩЕСТВУЮЩИЙ МЕТОД: Меняет цвет текста на плитках
+        private void ChangeTileTextColor(Color color)
+        {
+            var tileTextBlocks = new List<TextBlock>
+            {
+                TileMapTitle, TileMapDesc,
+                TileJournalsTitle, TileJournalsDesc,
+                TileReportsTitle, TileReportsDesc,
+                TileTabletTitle, TileTabletDesc,
+                TileReferencesTitle, TileReferencesDesc,
+                TileExchangeTitle, TileExchangeDesc
+            };
+
+            foreach (var tb in tileTextBlocks)
+            {
+                if (tb != null)
+                {
+                    tb.Foreground = new SolidColorBrush(color);
+                }
+            }
+        }
+
         private void Tile_Click(object sender, MouseButtonEventArgs e)
         {
             Border clickedTile = sender as Border;
@@ -158,8 +208,6 @@ namespace EWS_NSK_WPF
             }
         }
 
-
-        // === КЛИК ПО ПУНКТАМ БОКОВОГО МЕНЮ ===
         private void SidebarItem_Click(object sender, MouseButtonEventArgs e)
         {
             TextBlock clickedItem = sender as TextBlock;
@@ -168,16 +216,12 @@ namespace EWS_NSK_WPF
             string tag = clickedItem.Tag?.ToString();
             string text = clickedItem.Text;
 
-            // Если кликнули на любой пункт в разделе СПРАВОЧНИКИ
             if (tag == "СПРАВОЧНИКИ")
             {
                 if (!EnsureAuthorized()) return;
 
                 ReferencesWindow refWindow = new ReferencesWindow();
                 refWindow.Owner = this;
-
-                // Логика: какой пункт меню -> какую таблицу открыть
-                // Имена таблиц должны точно совпадать с теми, что в базе SQLite!
 
                 if (text == "Подразделения ППС")
                 {
@@ -189,7 +233,6 @@ namespace EWS_NSK_WPF
                 }
                 else if (text == "Характеристики")
                 {
-                    // Пока не знаем точное имя таблицы, используем tbl_EWS_Type как заглушку
                     refWindow.LoadTable("tbl_EWS_Type", "Характеристики");
                 }
                 else if (text == "Параметры проверок")
@@ -202,27 +245,58 @@ namespace EWS_NSK_WPF
                 }
                 else
                 {
-                    // Если кликнули на что-то другое в разделе Справочники
                     refWindow.LoadTable("tbl_EWS_Type", "Справочник");
                 }
 
                 refWindow.Show();
             }
-            // Здесь потом добавим логику для других разделов (КАРТА ПГ, ЖУРНАЛЫ и т.д.)
+            else if (tag == "КАРТА ПГ")
+            {
+                if (!EnsureAuthorized()) return;
+                string mode = (text == "Редактирование") ? "Edit" : "View";
+                MapWindow mapWindow = new MapWindow(currentUserFullName, currentUserPosition, "г. Новосибирск",
+                    mode == "Edit" ? WindowMode.Edit : WindowMode.View);
+                mapWindow.Owner = this;
+                mapWindow.Show();
+            }
+            else if (tag == "ЖУРНАЛЫ")
+            {
+                if (!EnsureAuthorized()) return;
+                JournalsWindow journalsWindow = new JournalsWindow(currentUserFullName, currentUserPosition, "г. Новосибирск", WindowMode.View);
+                journalsWindow.Owner = this;
+                journalsWindow.Show();
+            }
+            else if (tag == "ОТЧЁТЫ")
+            {
+                if (!EnsureAuthorized()) return;
+                ReportsWindow reportsWindow = new ReportsWindow(currentUserFullName, currentUserPosition, "г. Новосибирск", WindowMode.View);
+                reportsWindow.Owner = this;
+                reportsWindow.Show();
+            }
+            else if (tag == "ПЛАНШЕТ ИНППВ")
+            {
+                if (!EnsureAuthorized()) return;
+                TabletWindow tabletWindow = new TabletWindow(currentUserFullName, currentUserPosition, "г. Новосибирск", WindowMode.View);
+                tabletWindow.Owner = this;
+                tabletWindow.Show();
+            }
+            else if (tag == "ОБМЕН ДАННЫМИ")
+            {
+                if (!EnsureAuthorized()) return;
+                ExchangeWindow exchangeWindow = new ExchangeWindow(currentUserFullName, currentUserPosition, "г. Новосибирск", WindowMode.View);
+                exchangeWindow.Owner = this;
+                exchangeWindow.Show();
+            }
         }
 
-        // === ОБРАБОТЧИКИ ДЛЯ COMBOBOX (пока заглушки) ===
         private void UserStatusCombo_DropDownOpened(object sender, EventArgs e)
         {
-            // Пока ничего не делаем, позже добавим логику смены пользователя
         }
 
         private void TerritoryCombo_DropDownOpened(object sender, EventArgs e)
         {
-            // Пока ничего не делаем, позже добавим логику смены территории
         }
 
-        // === ВЫХОД ===
         private void Exit_Click(object sender, MouseButtonEventArgs e)
         {
             Application.Current.Shutdown();

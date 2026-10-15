@@ -1,7 +1,7 @@
 ﻿<Window x:Class="EWS_NSK_WPF.ReferencesWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Справочники" Height="600" Width="900"
+        Title="Справочники" Height="650" Width="1100"
         WindowStartupLocation="CenterOwner"
         Background="#002864">
 
@@ -12,46 +12,95 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- ВЕРХНЯЯ ЧАСТЬ: Заголовок и инфо -->
+        <!-- ВЕРХНЯЯ ЧАСТЬ: Заголовок -->
         <StackPanel Grid.Row="0" Margin="0,0,0,20">
             <TextBlock Text="СПРАВОЧНИКИ" FontSize="24" FontWeight="Bold" Foreground="Orange"/>
             <TextBlock x:Name="UserInfoLabel" FontSize="14" Foreground="White" Margin="0,10,0,0"/>
             <TextBlock x:Name="PermissionsLabel" FontSize="12" Foreground="LightGray" FontStyle="Italic" Margin="0,5,0,0"/>
         </StackPanel>
 
-        <!-- СРЕДНЯЯ ЧАСТЬ: Таблица данных с горизонтальным скроллом -->
-        <Border Grid.Row="1" Background="#003C78" CornerRadius="10" BorderBrush="Orange" BorderThickness="2" Padding="10">
-            <!-- ScrollViewer с горизонтальным скроллом -->
-            <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
-                <DataGrid x:Name="ReferenceDataGrid" 
-                          AutoGenerateColumns="False" 
-                          IsReadOnly="True" 
-                          CanUserAddRows="False"
-                          Background="Transparent" 
-                          Foreground="White" 
-                          BorderBrush="Transparent"
-                          RowBackground="#1A003C78" 
-                          AlternatingRowBackground="#1A00143C"
-                          HeadersVisibility="Column"
-                          FontSize="14"
-                          GridLinesVisibility="Horizontal">
+        <!-- СРЕДНЯЯ ЧАСТЬ: Левая панель + Таблица -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="250"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
 
-                    <!-- Стиль для заголовков таблицы -->
-                    <DataGrid.ColumnHeaderStyle>
-                        <Style TargetType="DataGridColumnHeader">
-                            <Setter Property="Background" Value="#002864"/>
-                            <Setter Property="Foreground" Value="Orange"/>
-                            <Setter Property="FontWeight" Value="Bold"/>
-                            <Setter Property="Padding" Value="10,5"/>
-                            <Setter Property="BorderBrush" Value="Orange"/>
-                            <Setter Property="BorderThickness" Value="0,0,1,0"/>
-                        </Style>
-                    </DataGrid.ColumnHeaderStyle>
-                </DataGrid>
-            </ScrollViewer>
-        </Border>
+            <!-- ЛЕВАЯ ПАНЕЛЬ: Список справочников -->
+            <Border Grid.Column="0" Background="#003C78" CornerRadius="10" BorderBrush="Orange" BorderThickness="2" Margin="0,0,15,0" Padding="15">
+                <StackPanel>
+                    <TextBlock Text="Выберите справочник:" FontSize="14" FontWeight="Bold" Foreground="Orange" Margin="0,0,0,15"/>
 
-        <!-- НИЖНЯЯ ЧАСТЬ: Кнопки -->
+                    <Button Content="Подразделения ППС" FontSize="13" Foreground="White" 
+                            Background="Transparent" BorderBrush="Transparent" 
+                            HorizontalContentAlignment="Left" Padding="10,8" Margin="0,2"
+                            Cursor="Hand" Click="ReferenceItem_Click" Tag="tbl_Fire3_Unit"/>
+
+                    <Button Content="Адресные объекты" FontSize="13" Foreground="White" 
+                            Background="Transparent" BorderBrush="Transparent" 
+                            HorizontalContentAlignment="Left" Padding="10,8" Margin="0,2"
+                            Cursor="Hand" Click="ReferenceItem_Click" Tag="tbl_RS4_AddressObject"/>
+
+                    <Button Content="Характеристики" FontSize="13" Foreground="White" 
+                            Background="Transparent" BorderBrush="Transparent" 
+                            HorizontalContentAlignment="Left" Padding="10,8" Margin="0,2"
+                            Cursor="Hand" Click="ReferenceItem_Click" Tag="tbl_EWS_Type"/>
+
+                    <Button Content="Параметры проверок" FontSize="13" Foreground="White" 
+                            Background="Transparent" BorderBrush="Transparent" 
+                            HorizontalContentAlignment="Left" Padding="10,8" Margin="0,2"
+                            Cursor="Hand" Click="ReferenceItem_Click" Tag="tbl_CheckEWS_StatusEWS"/>
+
+                    <Button Content="Балансодержатели" FontSize="13" Foreground="White" 
+                            Background="Transparent" BorderBrush="Transparent" 
+                            HorizontalContentAlignment="Left" Padding="10,8" Margin="0,2"
+                            Cursor="Hand" Click="ReferenceItem_Click" Tag="tbl_EWS_Owner"/>
+                </StackPanel>
+            </Border>
+
+            <!-- ПРАВАЯ ЧАСТЬ: Таблица данных (белый фон) -->
+            <Border Grid.Column="1" Background="White" CornerRadius="10" BorderBrush="Orange" BorderThickness="2" Padding="10">
+                <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+                    <DataGrid x:Name="ReferenceDataGrid" 
+                              AutoGenerateColumns="True" 
+                              IsReadOnly="True" 
+                              CanUserAddRows="False"
+                              Background="White"
+                              Foreground="Black"
+                              BorderBrush="Transparent"
+                              RowBackground="White"
+                              AlternatingRowBackground="#F0F8FF"
+                              HeadersVisibility="Column"
+                              FontSize="13"
+                              GridLinesVisibility="Horizontal"
+                              EnableRowVirtualization="True"
+                              EnableColumnVirtualization="True"
+                              VirtualizingPanel.IsVirtualizing="True"
+                              VirtualizingPanel.VirtualizationMode="Recycling"
+                              MaxHeight="600">
+
+                        <DataGrid.ColumnHeaderStyle>
+                            <Style TargetType="DataGridColumnHeader">
+                                <Setter Property="Background" Value="#003C78"/>
+                                <Setter Property="Foreground" Value="Orange"/>
+                                <Setter Property="FontWeight" Value="Bold"/>
+                                <Setter Property="Padding" Value="10,5"/>
+                                <Setter Property="BorderBrush" Value="Orange"/>
+                                <Setter Property="BorderThickness" Value="0,0,1,0"/>
+                            </Style>
+                        </DataGrid.ColumnHeaderStyle>
+
+                        <DataGrid.RowStyle>
+                            <Style TargetType="DataGridRow">
+                                <Setter Property="Foreground" Value="Black"/>
+                            </Style>
+                        </DataGrid.RowStyle>
+                    </DataGrid>
+                </ScrollViewer>
+            </Border>
+        </Grid>
+
+        <!-- НИЖНЯЯ ЧАСТЬ: Кнопка Закрыть -->
         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
             <Button Content="Закрыть" Width="100" Height="35" Background="#555" Foreground="White" 
                     BorderBrush="Transparent" Click="CloseButton_Click" Cursor="Hand"/>

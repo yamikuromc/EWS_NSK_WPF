@@ -12,20 +12,26 @@
     <None Remove="Resources\background.png" />
     <None Remove="Resources\exit.png" />
     <None Remove="Resources\guide_icon.png" />
+    <None Remove="Resources\INPPV.db" />
     <None Remove="Resources\journal_icon.png" />
     <None Remove="Resources\logo.png" />
     <None Remove="Resources\map_icon.png" />
     <None Remove="Resources\moon_icon.png" />
+    <None Remove="Resources\moon_icon_hd.png" />
     <None Remove="Resources\report_icon.png" />
     <None Remove="Resources\settings_icon.png" />
     <None Remove="Resources\sun_icon.png" />
+    <None Remove="Resources\sun_icon_hd.png" />
     <None Remove="Resources\swap_icon.png" />
+    <None Remove="Resources\swap_icon_hd.png" />
     <None Remove="Resources\tablet_icon.png" />
+    <None Remove="Resources\tablet_icon_hd.png" />
     <None Remove="Resources\tile_frame.png" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.12" />
+    <PackageReference Include="System.Data.SQLite.EF6" Version="2.0.3" />
   </ItemGroup>
 
   <ItemGroup>
@@ -35,22 +41,23 @@
   <ItemGroup>
     <Resource Include="Resources\background.png" />
     <Resource Include="Resources\guide_icon.png" />
+    <Content Include="Resources\INPPV.db">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Resource Include="Resources\journal_icon.png" />
     <Resource Include="Resources\logo.png" />
     <Resource Include="Resources\map_icon.png" />
     <Resource Include="Resources\moon_icon.png" />
+    <Resource Include="Resources\moon_icon_hd.png" />
     <Resource Include="Resources\report_icon.png" />
     <Resource Include="Resources\settings_icon.png" />
     <Resource Include="Resources\sun_icon.png" />
+    <Resource Include="Resources\sun_icon_hd.png" />
     <Resource Include="Resources\swap_icon.png" />
+    <Resource Include="Resources\swap_icon_hd.png" />
     <Resource Include="Resources\tablet_icon.png" />
+    <Resource Include="Resources\tablet_icon_hd.png" />
     <Resource Include="Resources\tile_frame.png" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Update="INPPV.db">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
   </ItemGroup>
 
 </Project>

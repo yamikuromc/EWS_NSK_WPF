@@ -1,32 +1,32 @@
-﻿using Microsoft.Data.Sqlite;
-using System;
+﻿using System;
+using System.Data;
 using System.IO;
 using System.Windows;
-using System.Data;
+using Microsoft.Data.Sqlite; // Используем только одну библиотеку SQLite
 
 namespace EWS_NSK_WPF
 {
     public class DatabaseHelper
     {
-       
+        // Путь к базе данных (она лежит в той же папке, что и запускаемый файл)
+        private static string DbPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "INPPV.db");
+
         public static DataTable GetTableData(string tableName)
         {
-                DataTable dataTable = new DataTable();
-                string connectionString = $"Data Source={DbPath}";
+            DataTable dataTable = new DataTable();
+            string connectionString = $"Data Source={DbPath}";
 
             using (var connection = new SqliteConnection(connectionString))
             {
                 try
                 {
                     connection.Open();
-                    // Запрос: выбрать всё из переданной таблицы
                     string query = $"SELECT * FROM {tableName};";
 
                     using (var command = new SqliteCommand(query, connection))
                     {
                         using (var reader = command.ExecuteReader())
                         {
-                            // Загружаем данные из reader в таблицу
                             dataTable.Load(reader);
                         }
                     }
@@ -39,39 +39,71 @@ namespace EWS_NSK_WPF
             return dataTable;
         }
 
-    // Путь к базе данных (она лежит в той же папке, что и запускаемый файл)
-    private static string DbPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "INPPV.db");
-
         public static int GetHydrantsCount()
         {
             int count = 0;
-
-            // Строка подключения к нашей базе
             string connectionString = $"Data Source={DbPath}";
 
             using (var connection = new SqliteConnection(connectionString))
             {
                 try
                 {
-                    connection.Open(); // Открываем связь с базой
-
-                    // Простой SQL-запрос: посчитать все строки в таблице гидрантов
+                    connection.Open();
                     string query = "SELECT COUNT(*) FROM tbl_EWS;";
 
                     using (var command = new SqliteCommand(query, connection))
                     {
-                        // Выполняем запрос и получаем одно число
                         count = Convert.ToInt32(command.ExecuteScalar());
                     }
                 }
                 catch (Exception ex)
                 {
-                    // Если что-то пошло не так, мы об этом узнаем
                     Console.WriteLine($"Ошибка базы данных: {ex.Message}");
                 }
             }
 
             return count;
+        }
+
+        // Метод для записи действий пользователя в лог (tbl_Set_UserLog)
+        public static void LogUserAction(int staffCod, string tableName, string recordId,
+                                          string fieldName, string oldValue, string newValue,
+                                          string actionType)
+        {
+            try
+            {
+                string connectionString = $"Data Source={DbPath}"; // Исправлено на DbPath
+
+                using (var connection = new SqliteConnection(connectionString)) // Исправлено на SqliteConnection
+                {
+                    connection.Open();
+
+                    string query = @"INSERT INTO tbl_Set_UserLog 
+                            (Staff_COD, StaffUserData, TableName, RecordID, FieldName, 
+                             OldValue, NewValue, ActionType) 
+                            VALUES (@StaffCOD, @StaffUserData, @TableName, @RecordID, 
+                                    @FieldName, @OldValue, @NewValue, @ActionType)";
+
+                    using (var command = new SqliteCommand(query, connection)) // Исправлено на SqliteCommand
+                    {
+                        command.Parameters.AddWithValue("@StaffCOD", staffCod);
+                        command.Parameters.AddWithValue("@StaffUserData", DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss"));
+                        command.Parameters.AddWithValue("@TableName", tableName);
+                        command.Parameters.AddWithValue("@RecordID", recordId);
+                        command.Parameters.AddWithValue("@FieldName", fieldName);
+                        command.Parameters.AddWithValue("@OldValue", oldValue ?? "");
+                        command.Parameters.AddWithValue("@NewValue", newValue ?? "");
+                        command.Parameters.AddWithValue("@ActionType", actionType);
+
+                        command.ExecuteNonQuery();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка записи в лог: {ex.Message}", "Ошибка",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
     }
 }
