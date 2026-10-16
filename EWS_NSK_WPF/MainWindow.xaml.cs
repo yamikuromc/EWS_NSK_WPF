@@ -223,6 +223,10 @@ namespace EWS_NSK_WPF
                 ReferencesWindow refWindow = new ReferencesWindow();
                 refWindow.Owner = this;
 
+                // 1. Сначала показываем окно (оно отрисует белый фон и индикатор загрузки)
+                refWindow.Show();
+
+                // 2. Потом начинаем загружать данные (асинхронно, не вешая интерфейс)
                 if (text == "Подразделения ППС")
                 {
                     refWindow.LoadTable("tbl_Fire3_Unit", "Подразделения ППС");
@@ -247,8 +251,6 @@ namespace EWS_NSK_WPF
                 {
                     refWindow.LoadTable("tbl_EWS_Type", "Справочник");
                 }
-
-                refWindow.Show();
             }
             else if (tag == "КАРТА ПГ")
             {

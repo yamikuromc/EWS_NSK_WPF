@@ -9,7 +9,7 @@ namespace EWS_NSK_WPF
     public class DatabaseHelper
     {
         // Путь к базе данных (она лежит в той же папке, что и запускаемый файл)
-        private static string DbPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "INPPV.db");
+        private static string DbPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources", "INPPV.db");
 
         public static DataTable GetTableData(string tableName)
         {

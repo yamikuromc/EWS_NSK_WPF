@@ -42,7 +42,7 @@
     <Resource Include="Resources\background.png" />
     <Resource Include="Resources\guide_icon.png" />
     <Content Include="Resources\INPPV.db">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Resource Include="Resources\journal_icon.png" />
     <Resource Include="Resources\logo.png" />

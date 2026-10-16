@@ -86,15 +86,22 @@ namespace EWS_NSK_WPF
         };
 
         private string currentTableName = "";
+        private bool isEditMode = false;
+        private DataTable currentDataTable = null;
 
         public ReferencesWindow()
         {
             InitializeComponent();
             UserInfoLabel.Text = "Режим: Просмотр справочных данных";
-            PermissionsLabel.Text = "Данные загружаются из локальной базы SQLite";
 
             // Загружаем первый справочник ПОСЛЕ полной загрузки окна
-            this.Loaded += (s, e) => LoadTable("tbl_Fire3_Unit", "Подразделения ППС");
+            this.Loaded += (s, e) =>
+            {
+                if (string.IsNullOrEmpty(currentTableName))
+                {
+                    LoadTable("tbl_Fire3_Unit", "Подразделения ППС");
+                }
+            };
         }
 
         // Метод загрузки таблицы (вызывается из MainWindow при клике в боковом меню)
@@ -114,31 +121,26 @@ namespace EWS_NSK_WPF
             string tableName = clickedButton.Tag?.ToString();
             if (string.IsNullOrEmpty(tableName)) return;
 
-            // Получаем название справочника из словаря
             string titleName = ReferenceTitles.ContainsKey(tableName)
                 ? ReferenceTitles[tableName]
                 : tableName;
 
             LoadTable(tableName, titleName);
-
-            // ВАЖНО: помечаем событие как обработанное
             e.Handled = true;
         }
+
         // Внутренний метод загрузки данных (асинхронный)
         private async void LoadData(string tableName)
         {
             try
             {
-                // Показываем индикатор загрузки
                 ReferenceDataGrid.IsEnabled = false;
                 ReferenceDataGrid.Opacity = 0.5;
 
-                // Загружаем данные в фоновом потоке
                 DataTable data = await Task.Run(() => DatabaseHelper.GetTableData(tableName));
 
                 if (data != null && data.Rows.Count > 0)
                 {
-                    // Переименовываем колонки на русский
                     if (ColumnTranslations.ContainsKey(tableName))
                     {
                         var translations = ColumnTranslations[tableName];
@@ -151,7 +153,7 @@ namespace EWS_NSK_WPF
                         }
                     }
 
-                    // Устанавливаем данные
+                    currentDataTable = data;
                     ReferenceDataGrid.ItemsSource = data.DefaultView;
                 }
                 else
@@ -167,15 +169,39 @@ namespace EWS_NSK_WPF
             }
             finally
             {
-                // Возвращаем DataGrid в рабочее состояние
                 ReferenceDataGrid.IsEnabled = true;
                 ReferenceDataGrid.Opacity = 1.0;
             }
         }
 
-        private void CloseButton_Click(object sender, RoutedEventArgs e)
+        // Кнопка "Режим редактирования" (пока заглушка)
+        private void EditButton_Click(object sender, RoutedEventArgs e)
         {
-            this.Close();
+            if (!isEditMode)
+            {
+                isEditMode = true;
+                ReferenceDataGrid.IsReadOnly = false;
+                ReferenceDataGrid.CanUserAddRows = true;
+                EditButton.Content = "Отменить редактирование";
+                SaveButton.Visibility = Visibility.Visible;
+                UserInfoLabel.Text = "Режим: Редактирование";
+            }
+            else
+            {
+                isEditMode = false;
+                ReferenceDataGrid.IsReadOnly = true;
+                ReferenceDataGrid.CanUserAddRows = false;
+                EditButton.Content = "Режим редактирования";
+                SaveButton.Visibility = Visibility.Collapsed;
+                UserInfoLabel.Text = "Режим: Просмотр справочных данных";
+            }
+        }
+
+        // Кнопка "Сохранить изменения" (пока заглушка)
+        private void SaveButton_Click(object sender, RoutedEventArgs e)
+        {
+            MessageBox.Show("Сохранение изменений будет реализовано после определения роли администратора.",
+                "Информация", MessageBoxButton.OK, MessageBoxImage.Information);
         }
     }
 }
