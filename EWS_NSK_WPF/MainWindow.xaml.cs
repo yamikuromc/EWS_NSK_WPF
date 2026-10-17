@@ -15,8 +15,9 @@ namespace EWS_NSK_WPF
         private bool isAuthorized = false;
         private string currentUserFullName = "Гость";
         private string currentUserPosition = "Гость";
-        private bool isDarkTheme = false;
-
+        private int currentUserRole = 0;       //  Роль пользователя
+        private int currentStaffId = 0;        //  ID сотрудника
+        
         public MainWindow()
         {
             InitializeComponent();
@@ -52,6 +53,8 @@ namespace EWS_NSK_WPF
                     isAuthorized = true;
                     currentUserFullName = authWindow.AuthorizedFullName;
                     currentUserPosition = authWindow.AuthorizedPosition;
+                    currentUserRole = authWindow.UserRole;   // ← ДОБАВЛЕНО
+                    currentStaffId = authWindow.StaffId;     // ← ДОБАВЛЕНО
 
                     UserStatusCombo.Items.Clear();
                     UserStatusCombo.Items.Add(currentUserPosition);
@@ -65,45 +68,16 @@ namespace EWS_NSK_WPF
 
         private void ThemeToggle_Click(object sender, RoutedEventArgs e)
         {
-            isDarkTheme = !isDarkTheme;
+            ThemeManager.IsDarkTheme = !ThemeManager.IsDarkTheme; // Переключаем через менеджер
             ApplyTheme();
         }
 
         private void ApplyTheme()
         {
-            if (isDarkTheme)
-            {
-                DarkOverlay.Opacity = 0.75;
-                SidebarBorder.Background = new SolidColorBrush(Color.FromArgb(230, 10, 10, 15));
-                HeaderBorder.Background = new SolidColorBrush(Color.FromArgb(210, 10, 10, 15));
-                FooterBorder.Background = new SolidColorBrush(Color.FromArgb(230, 5, 5, 10));
-
-                // В тёмной теме показываем солнце и текст "Светлая тема"
-                ThemeIcon.Source = new BitmapImage(new Uri("pack://application:,,,/Resources/sun_icon_hd.png"));
-                ThemeLabel.Text = "Светлая тема";
-                ThemeLabel.Foreground = new SolidColorBrush(Color.FromRgb(255, 165, 0)); // Оранжевый текст
-
-                ChangeTileBackgroundOpacity(0.6);
-                ChangeTileTextColor(Colors.White);
-            }
-            else
-            {
-                DarkOverlay.Opacity = 0;
-                SidebarBorder.Background = new SolidColorBrush(Color.FromArgb(200, 0, 40, 100));
-                HeaderBorder.Background = new SolidColorBrush(Color.FromArgb(180, 0, 20, 60));
-                FooterBorder.Background = new SolidColorBrush(Color.FromArgb(180, 0, 0, 0));
-
-                // В светлой теме показываем луну и текст "Тёмная тема"
-                ThemeIcon.Source = new BitmapImage(new Uri("pack://application:,,,/Resources/moon_icon_hd.png"));
-                ThemeLabel.Text = "Тёмная тема";
-                ThemeLabel.Foreground = new SolidColorBrush(Colors.White); // Белый текст
-
-                ChangeTileBackgroundOpacity(1.0);
-            }
+            ThemeManager.ApplyThemeToMainWindow(this); // Делегируем менеджеру
         }
-
         // ✅ НОВЫЙ МЕТОД: Меняет прозрачность ТОЛЬКО фона (Rectangle)
-        private void ChangeTileBackgroundOpacity(double opacity)
+        internal void ChangeTileBackgroundOpacity(double opacity)
         {
             var backgrounds = new List<System.Windows.Shapes.Rectangle>
     {
@@ -124,7 +98,7 @@ namespace EWS_NSK_WPF
             }
         }
         // ✅ СУЩЕСТВУЮЩИЙ МЕТОД: Меняет цвет текста на плитках
-        private void ChangeTileTextColor(Color color)
+        internal void ChangeTileTextColor(Color color)
         {
             var tileTextBlocks = new List<TextBlock>
             {
@@ -194,6 +168,8 @@ namespace EWS_NSK_WPF
                 {
                     ReferencesWindow refWindow = new ReferencesWindow();
                     refWindow.Owner = this;
+                    refWindow.SetUserRole(currentUserRole); 
+                    refWindow.SetStaffId(currentStaffId);  
                     refWindow.Show();
                 }
             }
@@ -222,6 +198,8 @@ namespace EWS_NSK_WPF
 
                 ReferencesWindow refWindow = new ReferencesWindow();
                 refWindow.Owner = this;
+                refWindow.SetUserRole(currentUserRole);
+                refWindow.SetStaffId(currentStaffId);
 
                 // 1. Сначала показываем окно (оно отрисует белый фон и индикатор загрузки)
                 refWindow.Show();

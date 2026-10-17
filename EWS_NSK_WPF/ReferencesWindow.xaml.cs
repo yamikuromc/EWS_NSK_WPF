@@ -88,13 +88,16 @@ namespace EWS_NSK_WPF
         private string currentTableName = "";
         private bool isEditMode = false;
         private DataTable currentDataTable = null;
+        private int userRole = 0;
+        private int currentStaffId = 0; // ← ДОБАВЛЕНО: ID текущего пользователя
 
         public ReferencesWindow()
         {
             InitializeComponent();
             UserInfoLabel.Text = "Режим: Просмотр справочных данных";
 
-            // Загружаем первый справочник ПОСЛЕ полной загрузки окна
+            ThemeManager.ApplyThemeToReferencesWindow(this); // ← ДОБАВИТЬ ЭТУ СТРОКУ
+
             this.Loaded += (s, e) =>
             {
                 if (string.IsNullOrEmpty(currentTableName))
@@ -110,6 +113,32 @@ namespace EWS_NSK_WPF
             currentTableName = tableName;
             this.Title = $"Справочник: {titleName}";
             LoadData(tableName);
+        }
+
+        // Метод для установки роли пользователя и управления доступом
+        public void SetUserRole(int role)
+        {
+            userRole = role;
+
+            System.Diagnostics.Debug.WriteLine($"[ReferencesWindow] Получена роль: {role}");
+
+            if (role >= 2) // Администратор части (2) или Главный админ (3)
+            {
+                AdminButtons.Visibility = Visibility.Visible;
+                System.Diagnostics.Debug.WriteLine("[ReferencesWindow] Кнопки админа ПОКАЗАНЫ");
+            }
+            else // Диспетчер (0) или Оператор (1) — только просмотр
+            {
+                AdminButtons.Visibility = Visibility.Collapsed;
+                System.Diagnostics.Debug.WriteLine("[ReferencesWindow] Кнопки админа СКРЫТЫ");
+            }
+        }
+
+        // ← ДОБАВЛЕНО: Метод для установки ID сотрудника
+        public void SetStaffId(int staffId)
+        {
+            currentStaffId = staffId;
+            System.Diagnostics.Debug.WriteLine($"[ReferencesWindow] Установлен Staff_ID: {staffId}");
         }
 
         // Обработчик клика по кнопке в левой панели
@@ -174,14 +203,14 @@ namespace EWS_NSK_WPF
             }
         }
 
-        // Кнопка "Режим редактирования" (пока заглушка)
+        // Кнопка "Режим редактирования"
         private void EditButton_Click(object sender, RoutedEventArgs e)
         {
             if (!isEditMode)
             {
                 isEditMode = true;
                 ReferenceDataGrid.IsReadOnly = false;
-                ReferenceDataGrid.CanUserAddRows = true;
+                ReferenceDataGrid.CanUserAddRows = false; // Не разрешаем добавлять строки пока
                 EditButton.Content = "Отменить редактирование";
                 SaveButton.Visibility = Visibility.Visible;
                 UserInfoLabel.Text = "Режим: Редактирование";
@@ -197,10 +226,10 @@ namespace EWS_NSK_WPF
             }
         }
 
-        // Кнопка "Сохранить изменения" (пока заглушка)
+        // Кнопка "Сохранить изменения" (заглушка)
         private void SaveButton_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("Сохранение изменений будет реализовано после определения роли администратора.",
+            MessageBox.Show($"Сохранение будет реализовано.\nStaff_ID: {currentStaffId}, Роль: {userRole}",
                 "Информация", MessageBoxButton.OK, MessageBoxImage.Information);
         }
     }

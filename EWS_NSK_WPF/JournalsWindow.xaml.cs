@@ -8,6 +8,7 @@ namespace EWS_NSK_WPF
         {
             InitializeComponent();
             UserInfoLabel.Text = $"Пользователь: {userName} ({position})";
+            ThemeManager.ApplyThemeToWindow(this);
 
             // Умная логика прав доступа
             WindowMode actualMode = requestedMode;

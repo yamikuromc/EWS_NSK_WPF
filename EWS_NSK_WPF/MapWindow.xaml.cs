@@ -7,6 +7,7 @@ namespace EWS_NSK_WPF
         public MapWindow(string userName, string position, string accessLevel, WindowMode requestedMode)
         {
             InitializeComponent();
+            ThemeManager.ApplyThemeToWindow(this);
 
             UserInfoLabel.Text = $"Пользователь: {userName} ({position})";
 

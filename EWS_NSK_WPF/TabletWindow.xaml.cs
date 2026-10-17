@@ -7,6 +7,7 @@ namespace EWS_NSK_WPF
         public TabletWindow(string userName, string position, string accessLevel, WindowMode requestedMode)
         {
             InitializeComponent();
+            ThemeManager.ApplyThemeToWindow(this);
             UserInfoLabel.Text = $"Пользователь: {userName} ({position})";
 
             WindowMode actualMode = requestedMode;

@@ -30,6 +30,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="Resources\INPPV.db">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.12" />
     <PackageReference Include="System.Data.SQLite.EF6" Version="2.0.3" />
   </ItemGroup>
@@ -41,9 +47,6 @@
   <ItemGroup>
     <Resource Include="Resources\background.png" />
     <Resource Include="Resources\guide_icon.png" />
-    <Content Include="Resources\INPPV.db">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Resource Include="Resources\journal_icon.png" />
     <Resource Include="Resources\logo.png" />
     <Resource Include="Resources\map_icon.png" />

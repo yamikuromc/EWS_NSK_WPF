@@ -1,14 +1,16 @@
 ﻿using System;
 using System.Data;
 using System.IO;
+using System.Text;
+using System.Security.Cryptography;
 using System.Windows;
-using Microsoft.Data.Sqlite; // Используем только одну библиотеку SQLite
+using Microsoft.Data.Sqlite;
 
 namespace EWS_NSK_WPF
 {
     public class DatabaseHelper
     {
-        // Путь к базе данных (она лежит в той же папке, что и запускаемый файл)
+        // Путь к базе данных (ищем в папке Resources)
         private static string DbPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources", "INPPV.db");
 
         public static DataTable GetTableData(string tableName)
@@ -65,16 +67,83 @@ namespace EWS_NSK_WPF
             return count;
         }
 
-        // Метод для записи действий пользователя в лог (tbl_Set_UserLog)
+        // === НОВЫЙ МЕТОД: Хеширование пароля (SHA256) ===
+        public static string HashPassword(string password)
+        {
+            using (SHA256 sha256 = SHA256.Create())
+            {
+                byte[] bytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
+                StringBuilder builder = new StringBuilder();
+                for (int i = 0; i < bytes.Length; i++)
+                {
+                    builder.Append(bytes[i].ToString("x2"));
+                }
+                return builder.ToString();
+            }
+        }
+
+        // === ОБНОВЛЁННЫЙ МЕТОД: Проверка логина и пароля (возвращает 5 значений) ===
+        public static (bool Success, string FullName, string Position, int Role, int StaffId) AuthenticateUser(string login, string passwordHash)
+        {
+            string connectionString = $"Data Source={DbPath}";
+
+            using (var connection = new SqliteConnection(connectionString))
+            {
+                try
+                {
+                    connection.Open();
+
+                    string query = @"
+                        SELECT u.Staff_ID, s.Staff_FIO, s.Staff_post, s.Staff_Role 
+                        FROM tbl_Auth_Users u
+                        JOIN tbl_Fire4_UnitStaff s ON u.Staff_ID = s.Staff_ID
+                        WHERE u.Login = @Login AND u.PasswordHash = @PasswordHash AND u.IsActive = 1";
+
+                    using (var command = new SqliteCommand(query, connection))
+                    {
+                        command.Parameters.AddWithValue("@Login", login);
+                        command.Parameters.AddWithValue("@PasswordHash", passwordHash);
+
+                        using (var reader = command.ExecuteReader())
+                        {
+                            if (reader.Read())
+                            {
+                                int staffId = Convert.ToInt32(reader["Staff_ID"]);
+                                string fullName = reader["Staff_FIO"].ToString() ?? "Неизвестно";
+                                string position = reader["Staff_post"].ToString() ?? "Сотрудник";
+
+                                int role = 0;
+                                if (reader["Staff_Role"] != DBNull.Value)
+                                {
+                                    role = Convert.ToInt32(reader["Staff_Role"]);
+                                }
+
+                                // Возвращаем 5 значений: успех, ФИО, должность, роль, ID сотрудника
+                                return (true, fullName, position, role, staffId);
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Ошибка авторизации: {ex.Message}");
+                }
+            }
+
+            // Если пользователь не найден или произошла ошибка
+            return (false, "", "", 0, 0);
+        }
+
+        // === МЕТОД: Запись действий пользователя в лог ===
         public static void LogUserAction(int staffCod, string tableName, string recordId,
                                           string fieldName, string oldValue, string newValue,
                                           string actionType)
         {
             try
             {
-                string connectionString = $"Data Source={DbPath}"; // Исправлено на DbPath
+                string connectionString = $"Data Source={DbPath}";
 
-                using (var connection = new SqliteConnection(connectionString)) // Исправлено на SqliteConnection
+                using (var connection = new SqliteConnection(connectionString))
                 {
                     connection.Open();
 
@@ -84,7 +153,7 @@ namespace EWS_NSK_WPF
                             VALUES (@StaffCOD, @StaffUserData, @TableName, @RecordID, 
                                     @FieldName, @OldValue, @NewValue, @ActionType)";
 
-                    using (var command = new SqliteCommand(query, connection)) // Исправлено на SqliteCommand
+                    using (var command = new SqliteCommand(query, connection))
                     {
                         command.Parameters.AddWithValue("@StaffCOD", staffCod);
                         command.Parameters.AddWithValue("@StaffUserData", DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss"));
