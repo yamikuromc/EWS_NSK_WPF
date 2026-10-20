@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Windows;
+using System.Windows.Media;
 
 namespace EWS_NSK_WPF
 {
     public partial class AuthWindow : Window
     {
-        // Свойства, которые мы вернём в главное окно после успешного входа
         public string AuthorizedFullName { get; private set; } = "Гость";
         public string AuthorizedPosition { get; private set; } = "Гость";
         public int UserRole { get; private set; }
@@ -14,7 +14,37 @@ namespace EWS_NSK_WPF
         public AuthWindow()
         {
             InitializeComponent();
-            ThemeManager.ApplyThemeToWindow(this);
+
+            // Подписываемся на событие полной загрузки окна
+            this.Loaded += AuthWindow_Loaded;
+        }
+
+        private void AuthWindow_Loaded(object sender, RoutedEventArgs e)
+        {
+            ApplyAuthTheme();
+        }
+
+        private void ApplyAuthTheme()
+        {
+            if (ThemeManager.IsDarkTheme)
+            {
+                // ТЁМНАЯ ТЕМА
+                this.Background = new SolidColorBrush(Color.FromRgb(30, 30, 50));
+                LoginLabel.Foreground = new SolidColorBrush(Colors.White);
+                PasswordLabel.Foreground = new SolidColorBrush(Colors.White);
+                DateLabel.Foreground = new SolidColorBrush(Colors.White);
+            }
+            else
+            {
+                // СВЕТЛАЯ ТЕМА
+                this.Background = new SolidColorBrush(Color.FromRgb(245, 245, 250)); // Светло-серый фон
+
+                // Делаем текст темно-синим, чтобы его было отлично видно на светлом фоне
+                Color darkBlue = Color.FromRgb(0, 40, 100);
+                LoginLabel.Foreground = new SolidColorBrush(darkBlue);
+                PasswordLabel.Foreground = new SolidColorBrush(darkBlue);
+                DateLabel.Foreground = new SolidColorBrush(darkBlue);
+            }
         }
 
         private void OkButton_Click(object sender, RoutedEventArgs e)
@@ -28,21 +58,16 @@ namespace EWS_NSK_WPF
                 return;
             }
 
-            // 1. Хешируем введенный пароль
             string passwordHash = DatabaseHelper.HashPassword(password);
-
-            // 2. Проверяем данные в базе
             var authResult = DatabaseHelper.AuthenticateUser(login, passwordHash);
 
             if (authResult.Success)
             {
-                // 3. Сохраняем данные пользователя
                 AuthorizedFullName = authResult.FullName;
                 AuthorizedPosition = authResult.Position;
                 UserRole = authResult.Role;
-                StaffId = authResult.StaffId; // ← ДОБАВЛЕНО: сохраняем ID сотрудника
+                StaffId = authResult.StaffId;
 
-                // Для отладки (можно потом убрать)
                 System.Diagnostics.Debug.WriteLine($"Вход успешен: {AuthorizedFullName}, Роль: {UserRole}, Staff_ID: {StaffId}");
 
                 this.DialogResult = true;

@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
-using System.Threading.Tasks;
 
 namespace EWS_NSK_WPF
 {
@@ -96,15 +97,78 @@ namespace EWS_NSK_WPF
             InitializeComponent();
             UserInfoLabel.Text = "Режим: Просмотр справочных данных";
 
-            ThemeManager.ApplyThemeToReferencesWindow(this); // ← ДОБАВИТЬ ЭТУ СТРОКУ
-
+            // Загружаем первый справочник ПОСЛЕ полной загрузки окна
             this.Loaded += (s, e) =>
             {
+                // Сначала применяем тему
+                ApplyCurrentTheme();
+
+                // Потом загружаем данные
                 if (string.IsNullOrEmpty(currentTableName))
                 {
                     LoadTable("tbl_Fire3_Unit", "Подразделения ППС");
                 }
             };
+        }
+
+        // Новый метод: применяем тему к DataGrid напрямую
+        private void ApplyCurrentTheme()
+        {
+            if (ThemeManager.IsDarkTheme)
+            {
+                // Тёмная тема
+                this.Background = new SolidColorBrush(Color.FromRgb(10, 10, 30));
+
+                ReferenceDataGrid.Background = new SolidColorBrush(Color.FromRgb(20, 20, 50));
+                ReferenceDataGrid.Foreground = new SolidColorBrush(Colors.White);
+                ReferenceDataGrid.RowBackground = new SolidColorBrush(Color.FromRgb(25, 25, 55));
+                ReferenceDataGrid.AlternatingRowBackground = new SolidColorBrush(Color.FromRgb(35, 35, 70));
+                ReferenceDataGrid.BorderBrush = new SolidColorBrush(Color.FromRgb(60, 60, 100));
+
+                // Заголовки колонок
+                var headerStyle = new Style(typeof(DataGridColumnHeader));
+                headerStyle.Setters.Add(new Setter(DataGridColumnHeader.BackgroundProperty,
+                    new SolidColorBrush(Color.FromRgb(0, 60, 120))));
+                headerStyle.Setters.Add(new Setter(DataGridColumnHeader.ForegroundProperty,
+                    new SolidColorBrush(Colors.Orange)));
+                headerStyle.Setters.Add(new Setter(DataGridColumnHeader.FontWeightProperty, FontWeights.Bold));
+                headerStyle.Setters.Add(new Setter(DataGridColumnHeader.BorderBrushProperty,
+                    new SolidColorBrush(Color.FromRgb(60, 60, 100))));
+                ReferenceDataGrid.ColumnHeaderStyle = headerStyle;
+
+                // Строки
+                var rowStyle = new Style(typeof(DataGridRow));
+                rowStyle.Setters.Add(new Setter(DataGridRow.ForegroundProperty,
+                    new SolidColorBrush(Colors.White)));
+                ReferenceDataGrid.RowStyle = rowStyle;
+
+                // Текст заголовка и подзаголовка
+                // (найди в XAML имена TextBlock'ов и примени сюда)
+            }
+            else
+            {
+                // Светлая тема (возвращаем как было)
+                this.Background = new SolidColorBrush(Color.FromRgb(0, 40, 100));
+
+                ReferenceDataGrid.Background = new SolidColorBrush(Colors.White);
+                ReferenceDataGrid.Foreground = new SolidColorBrush(Colors.Black);
+                ReferenceDataGrid.RowBackground = new SolidColorBrush(Colors.White);
+                ReferenceDataGrid.AlternatingRowBackground = new SolidColorBrush(Color.FromRgb(240, 248, 255));
+                ReferenceDataGrid.BorderBrush = new SolidColorBrush(Colors.Transparent);
+
+                var headerStyle = new Style(typeof(DataGridColumnHeader));
+                headerStyle.Setters.Add(new Setter(DataGridColumnHeader.BackgroundProperty,
+                    new SolidColorBrush(Color.FromRgb(0, 60, 120))));
+                headerStyle.Setters.Add(new Setter(DataGridColumnHeader.ForegroundProperty,
+                    new SolidColorBrush(Colors.Orange)));
+                headerStyle.Setters.Add(new Setter(DataGridColumnHeader.FontWeightProperty, FontWeights.Bold));
+                ReferenceDataGrid.ColumnHeaderStyle = headerStyle;
+
+                var rowStyle = new Style(typeof(DataGridRow));
+                rowStyle.Setters.Add(new Setter(DataGridRow.ForegroundProperty,
+                    new SolidColorBrush(Colors.Black)));
+                ReferenceDataGrid.RowStyle = rowStyle;
+            }
         }
 
         // Метод загрузки таблицы (вызывается из MainWindow при клике в боковом меню)
