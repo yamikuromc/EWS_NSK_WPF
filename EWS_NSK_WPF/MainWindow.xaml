@@ -144,8 +144,6 @@
                     <TextBlock x:Name="ThemeLabel" Text="Тёмная тема" FontSize="14" Foreground="White" VerticalAlignment="Center"/>
                 </StackPanel>
 
-                <!-- Версия -->
-                <TextBlock Grid.Column="2" Text="v. 2026" FontSize="14" Foreground="White" TextDecorations="Underline" Margin="0,0,30,0" VerticalAlignment="Center"/>
             </Grid>
         </Border>
 
@@ -318,7 +316,14 @@
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                <TextBlock Grid.Column="0" Text="Yaroslavtseva I.V." Foreground="White" FontSize="14" Margin="40,0,0,0" VerticalAlignment="Center"/>
+
+                <!-- Имя автора + версия в одной строке -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="40,0,0,0">
+                    <TextBlock Text="Yaroslavtseva I.V." Foreground="White" FontSize="14"/>
+                    <TextBlock Text="   v. 2026" Foreground="Gray" FontSize="12" VerticalAlignment="Center"/>
+                </StackPanel>
+
+                <!-- Кнопка выхода -->
                 <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="0,0,30,0" Cursor="Hand" MouseLeftButtonUp="Exit_Click">
                     <Image Source="/Resources/exit.png" Width="35" Height="35" Stretch="Uniform"/>
                     <TextBlock Text="ВЫХОД" FontSize="14" FontWeight="Bold" Foreground="Orange" Margin="10,0,0,0" VerticalAlignment="Center"/>

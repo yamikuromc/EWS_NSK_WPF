@@ -28,7 +28,6 @@ namespace EWS_NSK_WPF
         {
             if (ThemeManager.IsDarkTheme)
             {
-                // ТЁМНАЯ ТЕМА
                 this.Background = new SolidColorBrush(Color.FromRgb(30, 30, 50));
                 LoginLabel.Foreground = new SolidColorBrush(Colors.White);
                 PasswordLabel.Foreground = new SolidColorBrush(Colors.White);
@@ -36,14 +35,10 @@ namespace EWS_NSK_WPF
             }
             else
             {
-                // СВЕТЛАЯ ТЕМА
-                this.Background = new SolidColorBrush(Color.FromRgb(245, 245, 250)); // Светло-серый фон
-
-                // Делаем текст темно-синим, чтобы его было отлично видно на светлом фоне
-                Color darkBlue = Color.FromRgb(0, 40, 100);
-                LoginLabel.Foreground = new SolidColorBrush(darkBlue);
-                PasswordLabel.Foreground = new SolidColorBrush(darkBlue);
-                DateLabel.Foreground = new SolidColorBrush(darkBlue);
+                this.Background = new SolidColorBrush(Color.FromRgb(245, 245, 250)); // Светло-серый
+                LoginLabel.Foreground = new SolidColorBrush(Color.FromRgb(0, 40, 100));
+                PasswordLabel.Foreground = new SolidColorBrush(Color.FromRgb(0, 40, 100));
+                DateLabel.Foreground = new SolidColorBrush(Color.FromRgb(0, 40, 100));
             }
         }
 

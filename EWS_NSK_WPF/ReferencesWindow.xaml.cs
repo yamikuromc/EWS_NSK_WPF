@@ -7,7 +7,6 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Threading;
 
 namespace EWS_NSK_WPF
 {
@@ -90,7 +89,11 @@ namespace EWS_NSK_WPF
         private bool isEditMode = false;
         private DataTable currentDataTable = null;
         private int userRole = 0;
-        private int currentStaffId = 0; // ← ДОБАВЛЕНО: ID текущего пользователя
+        private int currentStaffId = 0;
+
+        // ← ДОБАВЛЕНО: Данные текущего пользователя для передачи в карту
+        private string currentUserName = "Пользователь";
+        private string currentUserPosition = "Сотрудник";
 
         public ReferencesWindow()
         {
@@ -125,29 +128,20 @@ namespace EWS_NSK_WPF
                 ReferenceDataGrid.AlternatingRowBackground = new SolidColorBrush(Color.FromRgb(35, 35, 70));
                 ReferenceDataGrid.BorderBrush = new SolidColorBrush(Color.FromRgb(60, 60, 100));
 
-                // Заголовки колонок
                 var headerStyle = new Style(typeof(DataGridColumnHeader));
-                headerStyle.Setters.Add(new Setter(DataGridColumnHeader.BackgroundProperty,
-                    new SolidColorBrush(Color.FromRgb(0, 60, 120))));
-                headerStyle.Setters.Add(new Setter(DataGridColumnHeader.ForegroundProperty,
-                    new SolidColorBrush(Colors.Orange)));
+                headerStyle.Setters.Add(new Setter(DataGridColumnHeader.BackgroundProperty, new SolidColorBrush(Color.FromRgb(0, 60, 120))));
+                headerStyle.Setters.Add(new Setter(DataGridColumnHeader.ForegroundProperty, new SolidColorBrush(Colors.Orange)));
                 headerStyle.Setters.Add(new Setter(DataGridColumnHeader.FontWeightProperty, FontWeights.Bold));
-                headerStyle.Setters.Add(new Setter(DataGridColumnHeader.BorderBrushProperty,
-                    new SolidColorBrush(Color.FromRgb(60, 60, 100))));
+                headerStyle.Setters.Add(new Setter(DataGridColumnHeader.BorderBrushProperty, new SolidColorBrush(Color.FromRgb(60, 60, 100))));
                 ReferenceDataGrid.ColumnHeaderStyle = headerStyle;
 
-                // Строки
                 var rowStyle = new Style(typeof(DataGridRow));
-                rowStyle.Setters.Add(new Setter(DataGridRow.ForegroundProperty,
-                    new SolidColorBrush(Colors.White)));
+                rowStyle.Setters.Add(new Setter(DataGridRow.ForegroundProperty, new SolidColorBrush(Colors.White)));
                 ReferenceDataGrid.RowStyle = rowStyle;
-
-                // Текст заголовка и подзаголовка
-                // (найди в XAML имена TextBlock'ов и примени сюда)
             }
             else
             {
-                // Светлая тема (возвращаем как было)
+                // Светлая тема
                 this.Background = new SolidColorBrush(Color.FromRgb(0, 40, 100));
 
                 ReferenceDataGrid.Background = new SolidColorBrush(Colors.White);
@@ -157,21 +151,17 @@ namespace EWS_NSK_WPF
                 ReferenceDataGrid.BorderBrush = new SolidColorBrush(Colors.Transparent);
 
                 var headerStyle = new Style(typeof(DataGridColumnHeader));
-                headerStyle.Setters.Add(new Setter(DataGridColumnHeader.BackgroundProperty,
-                    new SolidColorBrush(Color.FromRgb(0, 60, 120))));
-                headerStyle.Setters.Add(new Setter(DataGridColumnHeader.ForegroundProperty,
-                    new SolidColorBrush(Colors.Orange)));
+                headerStyle.Setters.Add(new Setter(DataGridColumnHeader.BackgroundProperty, new SolidColorBrush(Color.FromRgb(0, 60, 120))));
+                headerStyle.Setters.Add(new Setter(DataGridColumnHeader.ForegroundProperty, new SolidColorBrush(Colors.Orange)));
                 headerStyle.Setters.Add(new Setter(DataGridColumnHeader.FontWeightProperty, FontWeights.Bold));
                 ReferenceDataGrid.ColumnHeaderStyle = headerStyle;
 
                 var rowStyle = new Style(typeof(DataGridRow));
-                rowStyle.Setters.Add(new Setter(DataGridRow.ForegroundProperty,
-                    new SolidColorBrush(Colors.Black)));
+                rowStyle.Setters.Add(new Setter(DataGridRow.ForegroundProperty, new SolidColorBrush(Colors.Black)));
                 ReferenceDataGrid.RowStyle = rowStyle;
             }
         }
 
-        // Метод загрузки таблицы (вызывается из MainWindow при клике в боковом меню)
         public void LoadTable(string tableName, string titleName)
         {
             currentTableName = tableName;
@@ -179,33 +169,37 @@ namespace EWS_NSK_WPF
             LoadData(tableName);
         }
 
-        // Метод для установки роли пользователя и управления доступом
         public void SetUserRole(int role)
         {
             userRole = role;
-
             System.Diagnostics.Debug.WriteLine($"[ReferencesWindow] Получена роль: {role}");
 
-            if (role >= 2) // Администратор части (2) или Главный админ (3)
+            if (role >= 2)
             {
                 AdminButtons.Visibility = Visibility.Visible;
                 System.Diagnostics.Debug.WriteLine("[ReferencesWindow] Кнопки админа ПОКАЗАНЫ");
             }
-            else // Диспетчер (0) или Оператор (1) — только просмотр
+            else
             {
                 AdminButtons.Visibility = Visibility.Collapsed;
                 System.Diagnostics.Debug.WriteLine("[ReferencesWindow] Кнопки админа СКРЫТЫ");
             }
         }
 
-        // ← ДОБАВЛЕНО: Метод для установки ID сотрудника
         public void SetStaffId(int staffId)
         {
             currentStaffId = staffId;
             System.Diagnostics.Debug.WriteLine($"[ReferencesWindow] Установлен Staff_ID: {staffId}");
         }
 
-        // Обработчик клика по кнопке в левой панели
+        // ← ДОБАВЛЕНО: Метод для установки имени и должности пользователя
+        public void SetUserInfo(string name, string position)
+        {
+            currentUserName = name;
+            currentUserPosition = position;
+            System.Diagnostics.Debug.WriteLine($"[ReferencesWindow] Установлен пользователь: {currentUserName}, Должность: {currentUserPosition}");
+        }
+
         private void ReferenceItem_Click(object sender, RoutedEventArgs e)
         {
             Button clickedButton = sender as Button;
@@ -222,7 +216,6 @@ namespace EWS_NSK_WPF
             e.Handled = true;
         }
 
-        // Внутренний метод загрузки данных (асинхронный)
         private async void LoadData(string tableName)
         {
             try
@@ -267,14 +260,13 @@ namespace EWS_NSK_WPF
             }
         }
 
-        // Кнопка "Режим редактирования"
         private void EditButton_Click(object sender, RoutedEventArgs e)
         {
             if (!isEditMode)
             {
                 isEditMode = true;
                 ReferenceDataGrid.IsReadOnly = false;
-                ReferenceDataGrid.CanUserAddRows = false; // Не разрешаем добавлять строки пока
+                ReferenceDataGrid.CanUserAddRows = false;
                 EditButton.Content = "Отменить редактирование";
                 SaveButton.Visibility = Visibility.Visible;
                 UserInfoLabel.Text = "Режим: Редактирование";
@@ -290,11 +282,19 @@ namespace EWS_NSK_WPF
             }
         }
 
-        // Кнопка "Сохранить изменения" (заглушка)
         private void SaveButton_Click(object sender, RoutedEventArgs e)
         {
             MessageBox.Show($"Сохранение будет реализовано.\nStaff_ID: {currentStaffId}, Роль: {userRole}",
                 "Информация", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        // ← ДОБАВЛЕНО: Обработчик кнопки открытия карты
+        private void OpenMapButton_Click(object sender, RoutedEventArgs e)
+        {
+            // Открываем карту в режиме просмотра, передавая данные текущего пользователя
+            MapWindow mapWindow = new MapWindow(currentUserName, currentUserPosition, "г. Новосибирск", WindowMode.View);
+            mapWindow.Owner = this;
+            mapWindow.Show();
         }
     }
 }

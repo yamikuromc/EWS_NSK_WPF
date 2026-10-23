@@ -19,19 +19,30 @@
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
 
+            <!-- Левая часть заголовка -->
             <StackPanel Grid.Column="0">
                 <TextBlock Text="СПРАВОЧНИКИ" FontSize="22" FontWeight="Bold" Foreground="Orange"/>
                 <TextBlock x:Name="UserInfoLabel" FontSize="12" Foreground="White" Margin="0,4,0,0"/>
             </StackPanel>
 
-            <!-- Кнопки для администраторов (изначально скрыты) -->
-            <StackPanel Grid.Column="1" Orientation="Horizontal" x:Name="AdminButtons" Visibility="Collapsed">
-                <Button x:Name="EditButton" Content="Режим редактирования" Width="140" Height="28" 
-                        Background="#FF9800" Foreground="White" BorderBrush="Transparent" 
-                        Margin="0,0,10,0" Cursor="Hand" Click="EditButton_Click"/>
-                <Button x:Name="SaveButton" Content="Сохранить изменения" Width="140" Height="28" 
-                        Background="#4CAF50" Foreground="White" BorderBrush="Transparent" 
-                        Cursor="Hand" Click="SaveButton_Click" Visibility="Collapsed"/>
+            <!-- Правая часть: Кнопки управления -->
+            <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
+
+                <!-- Кнопка открытия карты (видна всем) -->
+                <Button x:Name="OpenMapButton" Content="🗺️ Открыть карту" Width="130" Height="28" 
+                        Background="#003C78" Foreground="White" BorderBrush="Orange" BorderThickness="1"
+                        Margin="0,0,10,0" Cursor="Hand" Click="OpenMapButton_Click"/>
+
+                <!-- Кнопки для администраторов (изначально скрыты) -->
+                <StackPanel x:Name="AdminButtons" Orientation="Horizontal" Visibility="Collapsed">
+                    <Button x:Name="EditButton" Content="Режим редактирования" Width="140" Height="28" 
+                            Background="#FF9800" Foreground="White" BorderBrush="Transparent" 
+                            Margin="0,0,10,0" Cursor="Hand" Click="EditButton_Click"/>
+                    <Button x:Name="SaveButton" Content="Сохранить изменения" Width="140" Height="28" 
+                            Background="#4CAF50" Foreground="White" BorderBrush="Transparent" 
+                            Cursor="Hand" Click="SaveButton_Click" Visibility="Collapsed"/>
+                </StackPanel>
+
             </StackPanel>
         </Grid>
 

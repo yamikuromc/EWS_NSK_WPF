@@ -169,7 +169,8 @@ namespace EWS_NSK_WPF
                     ReferencesWindow refWindow = new ReferencesWindow();
                     refWindow.Owner = this;
                     refWindow.SetUserRole(currentUserRole); 
-                    refWindow.SetStaffId(currentStaffId);  
+                    refWindow.SetStaffId(currentStaffId);
+                    refWindow.SetUserInfo(currentUserFullName, currentUserPosition);
                     refWindow.Show();
                 }
             }
@@ -200,6 +201,7 @@ namespace EWS_NSK_WPF
                 refWindow.Owner = this;
                 refWindow.SetUserRole(currentUserRole);
                 refWindow.SetStaffId(currentStaffId);
+                refWindow.SetUserInfo(currentUserFullName, currentUserPosition);
 
                 // 1. Сначала показываем окно (оно отрисует белый фон и индикатор загрузки)
                 refWindow.Show();
