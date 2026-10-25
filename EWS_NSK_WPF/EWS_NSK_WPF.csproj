@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <None Remove="Resources\background.png" />
+    <None Remove="Resources\EWSs_map.db" />
     <None Remove="Resources\exit.png" />
     <None Remove="Resources\guide_icon.png" />
     <None Remove="Resources\INPPV.db" />
@@ -30,13 +31,19 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="Resources\EWSs_map.db">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="Resources\INPPV.db">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="GMap.NET.Core" Version="2.1.7" />
+    <PackageReference Include="GMap.NET.WinPresentation" Version="2.1.7" />
     <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.12" />
+    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.119" />
     <PackageReference Include="System.Data.SQLite.EF6" Version="2.0.3" />
   </ItemGroup>
 

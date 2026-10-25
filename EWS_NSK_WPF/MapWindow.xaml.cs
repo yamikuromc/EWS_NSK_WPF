@@ -1,5 +1,11 @@
 ﻿using System.Windows;
+using EWS_NSK_WPF.Helpers;
 using System.Windows.Media;
+using GMap.NET;
+using GMap.NET.MapProviders;
+using GMap.NET.WindowsPresentation;
+using GMap.NET.WindowsPresentation;
+using System.IO;
 
 namespace EWS_NSK_WPF
 {
@@ -9,18 +15,40 @@ namespace EWS_NSK_WPF
         {
             InitializeComponent();
 
-            // Заполняем информацию о пользователе
+            // === НАСТРОЙКА КАРТЫ С MBTILES ===
+
+            // Загружаем EWSs_map файл
+            string mbTilesPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources", "EWSs_map.db");
+
+            if (File.Exists(mbTilesPath))
+            {
+                MBTilesProvider.Instance.LoadMBTilesFile(mbTilesPath);
+                MainMap.MapProvider = MBTilesProvider.Instance;
+            }
+            else
+            {
+                UserInfoLabel.Text = "Ошибка: файл карты не найден";
+                return;
+            }
+
+            // Настройки карты
+            MainMap.Manager.Mode = AccessMode.CacheOnly; // Только локальный кэш
+            MainMap.Position = new PointLatLng(55.0084, 82.9357); // Центр Новосибирска
+            MainMap.MinZoom = 10;
+            MainMap.MaxZoom = 18;
+            MainMap.Zoom = 12;
+            MainMap.DragButton = System.Windows.Input.MouseButton.Left;
+
             UserInfoLabel.Text = $"Пользователь: {userName} ({position})";
 
-            // === УМНАЯ ЛОГИКА ПРАВ ДОСТУПА ===
-            WindowMode actualMode = requestedMode;
-
-            // ... здесь остальной твой код с правами доступа ...
-
-            // Применяем тему после загрузки окна
             this.Loaded += (s, e) => ApplyTheme();
-        }
 
+            this.Closed += (s, e) =>
+            {
+                MainMap.MapProvider = null;
+                MainMap.Dispose();
+            };
+        }
         // Метод применения темы к этому окну
         private void ApplyTheme()
         {
