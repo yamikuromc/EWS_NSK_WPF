@@ -1,11 +1,11 @@
-﻿using System.Windows;
-using EWS_NSK_WPF.Helpers;
+﻿using System;
+using System.IO;
+using System.Windows;
 using System.Windows.Media;
+using EWS_NSK_WPF.Helpers;
 using GMap.NET;
 using GMap.NET.MapProviders;
 using GMap.NET.WindowsPresentation;
-using GMap.NET.WindowsPresentation;
-using System.IO;
 
 namespace EWS_NSK_WPF
 {
@@ -15,46 +15,68 @@ namespace EWS_NSK_WPF
         {
             InitializeComponent();
 
-            // === НАСТРОЙКА КАРТЫ С MBTILES ===
+            // === НАСТРОЙКА КАРТЫ ===
 
-            // Загружаем EWSs_map файл
-            string mbTilesPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources", "EWSs_map.db");
+            // 1. Устанавливаем правильный User-Agent (ОБЯЗАТЕЛЬНО!)
+            GMapProvider.UserAgent = "EWS_NSK_WPF/1.0 (Fire Hydrant System; mailto:yaroslavtseva@example.com)";
+
+            // 2. Пробуем загрузить MBTiles файл
+            string mbTilesPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "NewLoadMap.mbtiles");
 
             if (File.Exists(mbTilesPath))
             {
-                MBTilesProvider.Instance.LoadMBTilesFile(mbTilesPath);
-                MainMap.MapProvider = MBTilesProvider.Instance;
+                try
+                {
+                    MBTilesProvider.Instance.LoadMBTilesFile(mbTilesPath);
+                    // Используем MBTiles как основной провайдер
+                    MainMap.MapProvider = MBTilesProvider.Instance;
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Ошибка загрузки MBTiles: {ex.Message}");
+                    // Если MBTiles не загрузился — используем стандартный OSM
+                    MainMap.MapProvider = GMapProviders.OpenStreetMap;
+                }
             }
             else
             {
-                UserInfoLabel.Text = "Ошибка: файл карты не найден";
-                return;
+                // Если файла нет — используем стандартный OSM
+                MainMap.MapProvider = GMapProviders.OpenStreetMap;
             }
 
-            // Настройки карты
-            MainMap.Manager.Mode = AccessMode.CacheOnly; // Только локальный кэш
+            // 3. РЕЖИМ: ServerAndCache — сначала ищем локально, потом качаем
+            // Это ключевой момент! Даже с MBTiles это помогает
+            MainMap.Manager.Mode = AccessMode.ServerAndCache;
+
+            // 4. Настройки карты
             MainMap.Position = new PointLatLng(55.0084, 82.9357); // Центр Новосибирска
-            MainMap.MinZoom = 10;
-            MainMap.MaxZoom = 18;
-            MainMap.Zoom = 12;
+            MainMap.MinZoom = 10;  // Можно отдалить для обзора города
+            MainMap.MaxZoom = 18;  // Максимальное приближение
+            MainMap.Zoom = 14;     // Стартовый зум
             MainMap.DragButton = System.Windows.Input.MouseButton.Left;
+            MainMap.LevelsKeepInMemory = 5;
 
             UserInfoLabel.Text = $"Пользователь: {userName} ({position})";
 
             this.Loaded += (s, e) => ApplyTheme();
 
+            // 5. Правильное освобождение ресурсов
             this.Closed += (s, e) =>
             {
-                MainMap.MapProvider = null;
-                MainMap.Dispose();
+                try
+                {
+                    MainMap.MapProvider = null;
+                    MainMap.Dispose();
+                    MBTilesProvider.Instance?.Close();
+                }
+                catch { }
             };
         }
-        // Метод применения темы к этому окну
+
         private void ApplyTheme()
         {
             if (ThemeManager.IsDarkTheme)
             {
-                // ТЁМНАЯ ТЕМА
                 this.Background = new SolidColorBrush(Color.FromRgb(20, 20, 40));
                 MapTitleText.Foreground = new SolidColorBrush(Colors.Orange);
                 UserInfoLabel.Foreground = new SolidColorBrush(Colors.White);
@@ -62,14 +84,12 @@ namespace EWS_NSK_WPF
             }
             else
             {
-                // СВЕТЛАЯ ТЕМА - светло-серый фон, тёмный текст
-                this.Background = new SolidColorBrush(Color.FromRgb(245, 245, 250)); // Светло-серый
+                this.Background = new SolidColorBrush(Color.FromRgb(245, 245, 250));
                 MapTitleText.Foreground = new SolidColorBrush(Colors.Orange);
-                UserInfoLabel.Foreground = new SolidColorBrush(Color.FromRgb(0, 40, 100)); // Тёмно-синий
-                PermissionsLabel.Foreground = new SolidColorBrush(Color.FromRgb(60, 60, 90)); // Тёмно-серый
+                UserInfoLabel.Foreground = new SolidColorBrush(Color.FromRgb(0, 40, 100));
+                PermissionsLabel.Foreground = new SolidColorBrush(Color.FromRgb(60, 60, 90));
             }
         }
-        
 
         private void CloseButton_Click(object sender, RoutedEventArgs e) => this.Close();
     }

@@ -9,6 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="NewLoadMap.mbtiles" />
     <None Remove="Resources\background.png" />
     <None Remove="Resources\EWSs_map.db" />
     <None Remove="Resources\exit.png" />
@@ -31,6 +32,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="NewLoadMap.mbtiles">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="Resources\EWSs_map.db">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
