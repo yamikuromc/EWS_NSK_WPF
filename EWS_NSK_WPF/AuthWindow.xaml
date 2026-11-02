@@ -2,46 +2,101 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:sys="clr-namespace:System;assembly=mscorlib"
+        xmlns:vm="clr-namespace:EWS_NSK_WPF.ViewModels"
         Title="Авторизация" 
         Height="370" Width="360"
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize" 
         WindowStyle="SingleBorderWindow"
-        Background="#002864">
+        Background="{DynamicResource WindowBackground}">  <!-- ← ДОБАВИТЬ ЭТУ СТРОКУ -->
+    <!-- Привязываем ViewModel -->
+    <Window.DataContext>
+        <vm:AuthViewModel />
+    </Window.DataContext>
 
-    <Canvas Margin="20">
+    <Canvas Margin="20" Background="{DynamicResource WindowBackground}">
 
-        <!-- Заголовок (остается оранжевым в любой теме) -->
+        <!-- Заголовок -->
         <TextBlock Canvas.Left="0" Canvas.Top="0" 
                    Text="Вход в систему" 
                    FontSize="18" FontWeight="Bold" Foreground="Orange"/>
 
-        <!-- Логин (добавлен x:Name="LoginLabel") -->
-        <TextBlock x:Name="LoginLabel" Canvas.Left="0" Canvas.Top="40" Text="Логин" Foreground="White" FontSize="12"/>
-        <TextBox x:Name="LoginBox" Canvas.Left="0" Canvas.Top="60" Width="280" Height="28" FontSize="12"/>
+        <!-- Логин -->
+        <TextBlock Canvas.Left="0" Canvas.Top="40" Text="Логин" 
+                   FontSize="12" Foreground="{DynamicResource LabelForeground}"/>
+        <TextBox x:Name="LoginBox" Canvas.Left="0" Canvas.Top="60" Width="280" Height="28" FontSize="12"
+                 Background="{DynamicResource InputBackground}"
+                 Foreground="{DynamicResource InputForeground}"
+                 BorderBrush="{DynamicResource InputBorderBrush}"
+                 Text="{Binding Login, UpdateSourceTrigger=PropertyChanged}"
+                 KeyDown="TextBox_KeyDown"/>
 
-        <!-- Пароль (добавлен x:Name="PasswordLabel") -->
-        <TextBlock x:Name="PasswordLabel" Canvas.Left="0" Canvas.Top="100" Text="Пароль" Foreground="White" FontSize="12"/>
-        <PasswordBox x:Name="PasswordBox" Canvas.Left="0" Canvas.Top="120" Width="280" Height="28" FontSize="12"/>
+        <!-- Пароль -->
+        <TextBlock Canvas.Left="0" Canvas.Top="100" Text="Пароль" 
+                   FontSize="12" Foreground="{DynamicResource LabelForeground}"/>
+        <PasswordBox x:Name="PasswordBox" Canvas.Left="0" Canvas.Top="120" Width="280" Height="28" FontSize="12"
+                     Background="{DynamicResource InputBackground}"
+                     Foreground="{DynamicResource InputForeground}"
+                     BorderBrush="{DynamicResource InputBorderBrush}"
+                     PasswordChanged="PasswordBox_PasswordChanged"
+                     KeyDown="PasswordBox_KeyDown"/>
 
-        <!-- Дата (добавлен x:Name="DateLabel") -->
-        <TextBlock x:Name="DateLabel" Canvas.Left="0" Canvas.Top="170" Text="Дата" Foreground="White" FontSize="12"/>
-        <DatePicker x:Name="DateBox" Canvas.Left="0" Canvas.Top="190" Width="280" Height="28" FontSize="12" SelectedDate="{x:Static sys:DateTime.Today}"/>
+        <!-- Дата (Заголовок) -->
+        <TextBlock Canvas.Left="0" Canvas.Top="170" Text="Дата" 
+                   FontSize="12" Foreground="{DynamicResource LabelForeground}"/>
+
+        <!-- ДАТА (ФАЙКОВЫЙ DATEPICKER) -->
+        <!-- Мы используем Border + TextBlock вместо DatePicker. Это гарантирует отсутствие белых рамок, 
+             идеальное совпадение стилей с другими полями и невозможность редактирования. -->
+        <Border Canvas.Left="0" Canvas.Top="190" Width="280" Height="28"
+                Background="{DynamicResource InputBackground}"
+                BorderBrush="{DynamicResource InputBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="2">
+            <TextBlock Text="{Binding SelectedDate, StringFormat=dd.MM.yyyy, TargetNullValue=''}"
+                       Foreground="{DynamicResource InputForeground}"
+                       Padding="5,3"
+                       VerticalAlignment="Center"
+                       FontSize="12"/>
+        </Border>
 
         <!-- Сообщение об ошибке -->
-        <TextBlock x:Name="ErrorLabel" Canvas.Left="0" Canvas.Top="230" 
-                   Text="" Foreground="OrangeRed" FontSize="10" FontStyle="Italic" Width="280"/>
+        <TextBlock Canvas.Left="0" Canvas.Top="230" 
+                   Text="{Binding ErrorMessage}" 
+                   Foreground="OrangeRed" FontSize="10" FontStyle="Italic" Width="280"/>
 
-        <!-- Кнопки -->
-        <Button Content="Войти" Canvas.Left="100" Canvas.Top="260" 
+        <!-- Кнопка "Войти" с кастомным шаблоном (гарантирует оранжевый цвет и эффекты) -->
+        <Button x:Name="LoginButton" Content="Войти" Canvas.Left="100" Canvas.Top="260" 
                 Width="80" Height="30"
-                Background="Orange" Foreground="White" FontWeight="Bold" BorderBrush="Transparent"
-                Click="OkButton_Click" IsDefault="True"/>
+                Command="{Binding LoginCommand}" 
+                CommandParameter="{Binding ElementName=PasswordBox}"
+                IsDefault="True">
+            <Button.Template>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="border" Background="Orange" CornerRadius="2" BorderBrush="Transparent" BorderThickness="1">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" 
+                                          TextElement.FontWeight="Bold" TextElement.Foreground="White"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <!-- При наведении -->
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="border" Property="Background" Value="#FF8C00"/>
+                        </Trigger>
+                        <!-- Если кнопка неактивна (нет логина/пароля) -->
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="border" Property="Background" Value="LightGray"/>
+                            <Setter Property="TextElement.Foreground" Value="Gray"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Button.Template>
+        </Button>
 
+        <!-- Кнопка "Отмена" -->
         <Button Content="Отмена" Canvas.Left="190" Canvas.Top="260" 
                 Width="80" Height="30"
-                Background="#003C78" Foreground="White" BorderBrush="Transparent"
-                Click="CancelButton_Click" IsCancel="True"/>
+                Background="{DynamicResource ButtonCancelBackground}" Foreground="White" BorderBrush="Transparent"
+                Click="CancelButton_Click"/>
 
     </Canvas>
 </Window>

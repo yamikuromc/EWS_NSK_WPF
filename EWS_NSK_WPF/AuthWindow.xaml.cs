@@ -1,78 +1,52 @@
 ﻿using System;
 using System.Windows;
-using System.Windows.Media;
+using System.Windows.Controls;
+using System.Windows.Input;
+using EWS_NSK_WPF.ViewModels;
 
 namespace EWS_NSK_WPF
 {
     public partial class AuthWindow : Window
     {
-        public string AuthorizedFullName { get; private set; } = "Гость";
-        public string AuthorizedPosition { get; private set; } = "Гость";
-        public int UserRole { get; private set; }
-        public int StaffId { get; private set; }
-
         public AuthWindow()
         {
             InitializeComponent();
+            ApplyTheme();
 
-            // Подписываемся на событие полной загрузки окна
-            this.Loaded += AuthWindow_Loaded;
-        }
-
-        private void AuthWindow_Loaded(object sender, RoutedEventArgs e)
-        {
-            ApplyAuthTheme();
-        }
-
-        private void ApplyAuthTheme()
-        {
-            if (ThemeManager.IsDarkTheme)
+            if (DataContext is AuthViewModel vm)
             {
-                this.Background = new SolidColorBrush(Color.FromRgb(30, 30, 50));
-                LoginLabel.Foreground = new SolidColorBrush(Colors.White);
-                PasswordLabel.Foreground = new SolidColorBrush(Colors.White);
-                DateLabel.Foreground = new SolidColorBrush(Colors.White);
-            }
-            else
-            {
-                this.Background = new SolidColorBrush(Color.FromRgb(245, 245, 250)); // Светло-серый
-                LoginLabel.Foreground = new SolidColorBrush(Color.FromRgb(0, 40, 100));
-                PasswordLabel.Foreground = new SolidColorBrush(Color.FromRgb(0, 40, 100));
-                DateLabel.Foreground = new SolidColorBrush(Color.FromRgb(0, 40, 100));
+                vm.PropertyChanged += Vm_PropertyChanged;
             }
         }
 
-        private void OkButton_Click(object sender, RoutedEventArgs e)
+        private void PasswordBox_PasswordChanged(object sender, RoutedEventArgs e)
         {
-            string login = LoginBox.Text.Trim();
-            string password = PasswordBox.Password;
-
-            if (string.IsNullOrEmpty(login) || string.IsNullOrEmpty(password))
+            if (DataContext is AuthViewModel vm)
             {
-                ErrorLabel.Text = "Введите логин и пароль.";
-                return;
+                vm.HasPassword = !string.IsNullOrEmpty(((PasswordBox)sender).Password);
             }
+        }
 
-            string passwordHash = DatabaseHelper.HashPassword(password);
-            var authResult = DatabaseHelper.AuthenticateUser(login, passwordHash);
-
-            if (authResult.Success)
+        private void TextBox_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
             {
-                AuthorizedFullName = authResult.FullName;
-                AuthorizedPosition = authResult.Position;
-                UserRole = authResult.Role;
-                StaffId = authResult.StaffId;
-
-                System.Diagnostics.Debug.WriteLine($"Вход успешен: {AuthorizedFullName}, Роль: {UserRole}, Staff_ID: {StaffId}");
-
-                this.DialogResult = true;
-                this.Close();
+                e.Handled = true;
+                PasswordBox.Focus();
             }
-            else
+        }
+
+        private void PasswordBox_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
             {
-                ErrorLabel.Text = "Неверный логин, пароль или учетная запись неактивна.";
-                PasswordBox.Clear();
-                LoginBox.Focus();
+                e.Handled = true;
+                LoginButton.Focus();
+
+                if (DataContext is AuthViewModel vm && vm.LoginCommand.CanExecute(PasswordBox))
+                {
+                    vm.LoginCommand.Execute(PasswordBox);
+                }
             }
         }
 
@@ -81,5 +55,33 @@ namespace EWS_NSK_WPF
             this.DialogResult = false;
             this.Close();
         }
+
+        private void ApplyTheme()
+        {
+            string themePath = ThemeManager.IsDarkTheme
+                ? "Themes/DarkTheme.xaml"
+                : "Themes/LightTheme.xaml";
+
+            var themeDict = new ResourceDictionary { Source = new Uri(themePath, UriKind.Relative) };
+            Resources.MergedDictionaries.Clear();
+            Resources.MergedDictionaries.Add(themeDict);
+        }
+
+        private void Vm_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(AuthViewModel.IsSuccess))
+            {
+                if (DataContext is AuthViewModel vm)
+                {
+                    this.DialogResult = vm.IsSuccess;
+                    this.Close();
+                }
+            }
+        }
+
+        public string AuthorizedFullName => ((AuthViewModel)DataContext).AuthorizedFullName;
+        public string AuthorizedPosition => ((AuthViewModel)DataContext).AuthorizedPosition;
+        public int UserRole => ((AuthViewModel)DataContext).UserRole;
+        public int StaffId => ((AuthViewModel)DataContext).StaffId;
     }
 }

@@ -6,6 +6,15 @@
 
     <Application.Resources>
 
+        <!-- РЕСУРСЫ ПО УМОЛЧАНИЮ (светлая тема как fallback) -->
+        <!-- Нужны, чтобы дизайнер Visual Studio мог отрисовать окна -->
+        <SolidColorBrush x:Key="WindowBackground" Color="#F5F5FA"/>
+        <SolidColorBrush x:Key="LabelForeground" Color="#002864"/>
+        <SolidColorBrush x:Key="ButtonCancelBackground" Color="#003C78"/>
+        <SolidColorBrush x:Key="InputBackground" Color="#FFFFFF"/>
+        <SolidColorBrush x:Key="InputForeground" Color="#000000"/>
+        <SolidColorBrush x:Key="InputBorderBrush" Color="#CCCCCC"/>
+
         <!-- УМНЫЙ ПОЛЗУНОК ДЛЯ ВСЕГО ПРИЛОЖЕНИЯ (вертикальный) -->
         <Style TargetType="ScrollBar">
             <Setter Property="Width" Value="8"/>
@@ -29,7 +38,6 @@
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
-            <!-- Триггер для горизонтального ползунка -->
             <Style.Triggers>
                 <Trigger Property="Orientation" Value="Horizontal">
                     <Setter Property="Width" Value="Auto"/>

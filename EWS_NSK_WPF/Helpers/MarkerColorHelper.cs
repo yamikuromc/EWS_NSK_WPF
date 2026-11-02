@@ -20,7 +20,7 @@ namespace EWS_NSK_WPF.Helpers
                     return (Color.FromRgb(244, 67, 54), Color.FromRgb(211, 47, 47)); // КРАСНЫЙ
 
                 if (s.Contains("исправен") || s.Contains("работает") || s.Contains("норма"))
-                    return (Color.FromRgb(33, 150, 243), Color.FromRgb(25, 118, 210)); // СИНИЙ
+                    return (Color.FromRgb(20, 80, 200), Color.FromRgb(10, 50, 150)); // Насыщенный синий
 
                 // ЖЁЛТЫЙ вместо оранжевого — лучше видно и не путается с красным
                 if (s.Contains("требует") || s.Contains("проверк"))
