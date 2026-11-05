@@ -1,0 +1,110 @@
+﻿<Window x:Class="EWS_NSK_WPF.HydrantDetailsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Свойства гидранта" 
+        Width="550" Height="450"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        Background="{DynamicResource WindowBackground}">
+
+    <Grid Margin="15">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TabControl Background="Transparent" BorderBrush="{DynamicResource InputBorderBrush}">
+            <TabItem Header="Основное" FontSize="12">
+                <ScrollViewer Padding="10" VerticalScrollBarVisibility="Auto">
+                    <UniformGrid Columns="2" HorizontalAlignment="Stretch" VerticalAlignment="Top">
+                        <StackPanel Margin="0,0,10,10">
+                            <TextBlock Text="Номер / Название" FontSize="11" Foreground="{DynamicResource LabelForeground}"/>
+                            <TextBox Text="{Binding Hydrant.DisplayNumber, Mode=OneWay}" IsReadOnly="True" Style="{StaticResource ReadOnlyTextBoxStyle}"/>
+                        </StackPanel>
+                        <StackPanel Margin="10,0,0,10">
+                            <TextBlock Text="Статус" FontSize="11" Foreground="{DynamicResource LabelForeground}"/>
+                            <TextBox Text="{Binding Hydrant.StatusName, Mode=OneWay}" IsReadOnly="True" Style="{StaticResource ReadOnlyTextBoxStyle}"/>
+                        </StackPanel>
+                        <StackPanel Margin="0,0,10,10">
+                            <TextBlock Text="Адрес (объект)" FontSize="11" Foreground="{DynamicResource LabelForeground}"/>
+                            <TextBox Text="{Binding Hydrant.EwsAddressObjectCod}" IsReadOnly="{Binding IsReadOnly}"
+                                     Background="{DynamicResource InputBackground}" Foreground="{DynamicResource InputForeground}"
+                                     BorderBrush="{DynamicResource InputBorderBrush}" Padding="5,3"/>
+                        </StackPanel>
+                        <StackPanel Margin="10,0,0,10">
+                            <TextBlock Text="Номер дома" FontSize="11" Foreground="{DynamicResource LabelForeground}"/>
+                            <TextBox Text="{Binding Hydrant.EwsHouseNumber}" IsReadOnly="{Binding IsReadOnly}"
+                                     Background="{DynamicResource InputBackground}" Foreground="{DynamicResource InputForeground}"
+                                     BorderBrush="{DynamicResource InputBorderBrush}" Padding="5,3"/>
+                        </StackPanel>
+                        <StackPanel Margin="0,0,10,10" Grid.ColumnSpan="2">
+                            <TextBlock Text="Владелец / Балансодержатель" FontSize="11" Foreground="{DynamicResource LabelForeground}"/>
+                            <TextBox Text="{Binding Hydrant.OwnerName, Mode=OneWay}" IsReadOnly="True" Style="{StaticResource ReadOnlyTextBoxStyle}"/>
+                        </StackPanel>
+                    </UniformGrid>
+                </ScrollViewer>
+            </TabItem>
+
+            <TabItem Header="Технические" FontSize="12">
+                <ScrollViewer Padding="10" VerticalScrollBarVisibility="Auto">
+                    <UniformGrid Columns="2" HorizontalAlignment="Stretch" VerticalAlignment="Top">
+                        <StackPanel Margin="0,0,10,10">
+                            <TextBlock Text="Диаметр (водопровод)" FontSize="11" Foreground="{DynamicResource LabelForeground}"/>
+                            <TextBox Text="{Binding Hydrant.PipeInfo}" IsReadOnly="{Binding IsReadOnly}"
+                                     Background="{DynamicResource InputBackground}" Foreground="{DynamicResource InputForeground}"
+                                     BorderBrush="{DynamicResource InputBorderBrush}" Padding="5,3"/>
+                        </StackPanel>
+                        <StackPanel Margin="10,0,0,10">
+                            <TextBlock Text="Количество ПА" FontSize="11" Foreground="{DynamicResource LabelForeground}"/>
+                            <TextBox Text="{Binding Hydrant.EwsCountPa}" IsReadOnly="{Binding IsReadOnly}"
+                                     Background="{DynamicResource InputBackground}" Foreground="{DynamicResource InputForeground}"
+                                     BorderBrush="{DynamicResource InputBorderBrush}" Padding="5,3"/>
+                        </StackPanel>
+                        <StackPanel Margin="0,0,10,10" Grid.ColumnSpan="2">
+                            <TextBlock Text="Привязка (описание)" FontSize="11" Foreground="{DynamicResource LabelForeground}"/>
+                            <TextBox Text="{Binding Hydrant.EwsPriviazka}" Height="60" TextWrapping="Wrap" AcceptsReturn="True" IsReadOnly="{Binding IsReadOnly}"
+                                     Background="{DynamicResource InputBackground}" Foreground="{DynamicResource InputForeground}"
+                                     BorderBrush="{DynamicResource InputBorderBrush}" Padding="5,3"/>
+                        </StackPanel>
+                    </UniformGrid>
+                </ScrollViewer>
+            </TabItem>
+
+            <TabItem Header="Координаты" FontSize="12">
+                <ScrollViewer Padding="10" VerticalScrollBarVisibility="Auto">
+                    <UniformGrid Columns="2" HorizontalAlignment="Stretch" VerticalAlignment="Top">
+                        <StackPanel Margin="0,0,10,10">
+                            <TextBlock Text="Широта" FontSize="11" Foreground="{DynamicResource LabelForeground}"/>
+                            <TextBox Text="{Binding Hydrant.LatitudeD, StringFormat=F6}" IsReadOnly="True" Style="{StaticResource ReadOnlyTextBoxStyle}"/>
+                        </StackPanel>
+                        <StackPanel Margin="10,0,0,10">
+                            <TextBlock Text="Долгота" FontSize="11" Foreground="{DynamicResource LabelForeground}"/>
+                            <TextBox Text="{Binding Hydrant.LongitudeD, StringFormat=F6}" IsReadOnly="True" Style="{StaticResource ReadOnlyTextBoxStyle}"/>
+                        </StackPanel>
+                        <StackPanel Margin="0,0,10,10" Grid.ColumnSpan="2">
+                            <TextBlock Text="Состояние / Примечание" FontSize="11" Foreground="{DynamicResource LabelForeground}"/>
+                            <TextBox Text="{Binding Hydrant.EwsStateNote}" Height="60" TextWrapping="Wrap" IsReadOnly="{Binding IsReadOnly}"
+                                     Background="{DynamicResource InputBackground}" Foreground="{DynamicResource InputForeground}"
+                                     BorderBrush="{DynamicResource InputBorderBrush}" Padding="5,3"/>
+                        </StackPanel>
+                    </UniformGrid>
+                </ScrollViewer>
+            </TabItem>
+        </TabControl>
+
+        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,15,0,0">
+            <Button Content="💾 Сохранить" Width="100" Height="28" Margin="0,0,10,0"
+                    Background="{DynamicResource ButtonSaveBackground}" Foreground="White" BorderBrush="Transparent"
+                    Command="{Binding SaveCommand}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}"
+                    Visibility="{Binding CanSave, Converter={StaticResource BoolToVisibilityConverter}}"/>
+
+            <Button Content="🗑️ Удалить" Width="100" Height="28" Margin="0,0,10,0"
+                    Background="#F44336" Foreground="White" BorderBrush="Transparent"
+                    Visibility="{Binding CanDelete, Converter={StaticResource BoolToVisibilityConverter}}"/>
+
+            <Button Content="Закрыть" Width="100" Height="28"
+                    Background="{DynamicResource ButtonCancelBackground}" Foreground="White" BorderBrush="Transparent"
+                    Command="{Binding CloseCommand}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}"/>
+        </StackPanel>
+    </Grid>
+</Window>

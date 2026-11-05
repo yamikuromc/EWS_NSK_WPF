@@ -5,6 +5,8 @@ using System.Windows.Shapes;
 using GMap.NET;
 using GMap.NET.WindowsPresentation;
 using EWS_NSK_WPF.Models;
+using System.Windows.Input;
+using System.Linq;
 
 namespace EWS_NSK_WPF.Helpers
 {
@@ -13,7 +15,7 @@ namespace EWS_NSK_WPF.Helpers
         /// <summary>
         /// Создаёт маркер гидранта с цветовой индикацией статуса
         /// </summary>
-        public static GMapMarker CreateMarker(Ewss hydrant, int currentZoom)
+        public static GMapMarker CreateMarker(Ewss hydrant, int currentZoom, int userRole)
         {
             // Размер маркера зависит от зума
             double markerSize = GetMarkerSize(currentZoom);
@@ -26,9 +28,9 @@ namespace EWS_NSK_WPF.Helpers
 
             // Создаём Canvas с маркером
             var canvas = CreateMarkerCanvas(
-                markerSize, strokeThickness, showText, textScale,
-                fillColor, strokeColor,
-                hydrant.DisplayNumber, hydrant.PipeInfo);
+         markerSize, strokeThickness, showText, textScale,
+         fillColor, strokeColor,
+         hydrant.DisplayNumber, hydrant.PipeInfo, hydrant, userRole); // <-- Передаём hydrant и userRole
 
             var marker = new GMapMarker(new PointLatLng(hydrant.LatitudeD, hydrant.LongitudeD))
             {
@@ -133,11 +135,12 @@ namespace EWS_NSK_WPF.Helpers
         }
 
         /// <summary>
-        /// Создаёт Canvas с маркером (половина эллипса + контур + линия + текст)
+        /// Создаёт Canvas с маркером (половина эллипса + контур + линия + текст + события мыши)
         /// </summary>
         private static Canvas CreateMarkerCanvas(
             double markerSize, double strokeThickness, bool showText, double textScale,
-            Color fillColor, Color strokeColor, string number, string truba)
+            Color fillColor, Color strokeColor, string number, string truba,
+            Ewss hydrant, int userRole) // <-- ДОБАВЛЕНЫ ПАРАМЕТРЫ
         {
             var canvas = new Canvas
             {
@@ -146,6 +149,49 @@ namespace EWS_NSK_WPF.Helpers
                 Height = 100
             };
             Panel.SetZIndex(canvas, 1000);
+
+            // 1. ДВОЙНОЙ КЛИК: Открытие окна свойств (через MouseLeftButtonDown и ClickCount)
+            canvas.MouseLeftButtonDown += (s, e) =>
+            {
+                if (e.ClickCount == 2) // Проверяем, что это именно двойной клик
+                {
+                    var detailsWindow = new HydrantDetailsWindow(hydrant, userRole);
+                    detailsWindow.Owner = System.Windows.Application.Current.MainWindow;
+                    detailsWindow.ShowDialog();
+                    e.Handled = true;
+                }
+            };
+
+            // 2. ПРАВЫЙ КЛИК: Контекстное меню
+            var contextMenu = new System.Windows.Controls.ContextMenu();
+
+            var propertiesMenuItem = new System.Windows.Controls.MenuItem
+            {
+                Header = "📋 Свойства гидранта",
+                FontSize = 12
+            };
+            propertiesMenuItem.Click += (s, e) =>
+            {
+                var detailsWindow = new HydrantDetailsWindow(hydrant, userRole);
+                detailsWindow.Owner = System.Windows.Application.Current.MainWindow;
+                detailsWindow.ShowDialog();
+            };
+            contextMenu.Items.Add(propertiesMenuItem);
+            contextMenu.Items.Add(new System.Windows.Controls.Separator());
+
+            var copyCoordsMenuItem = new System.Windows.Controls.MenuItem
+            {
+                Header = "📍 Копировать координаты",
+                FontSize = 12
+            };
+            copyCoordsMenuItem.Click += (s, e) =>
+            {
+                System.Windows.Clipboard.SetText($"{hydrant.LatitudeD}, {hydrant.LongitudeD}");
+                System.Windows.MessageBox.Show("Координаты скопированы в буфер обмена!", "Успех", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
+            };
+            contextMenu.Items.Add(copyCoordsMenuItem);
+
+            canvas.ContextMenu = contextMenu;
 
             // При наведении мыши — поднимаем маркер на передний план
             canvas.MouseEnter += (s, e) =>
@@ -160,11 +206,11 @@ namespace EWS_NSK_WPF.Helpers
             };
 
             // Половина эллипса (заполненная)
-            var halfEllipse = new Path
+            var halfEllipse = new System.Windows.Shapes.Path
             {
                 Data = CreateHalfEllipseGeometry(markerSize),
-                Fill = new SolidColorBrush(fillColor),
-                Stroke = Brushes.Transparent,
+                Fill = new System.Windows.Media.SolidColorBrush(fillColor),
+                Stroke = System.Windows.Media.Brushes.Transparent,
                 Tag = "hydrant_half"
             };
             Canvas.SetLeft(halfEllipse, 0);
@@ -172,12 +218,12 @@ namespace EWS_NSK_WPF.Helpers
             canvas.Children.Add(halfEllipse);
 
             // Контур эллипса
-            var ellipseOutline = new Ellipse
+            var ellipseOutline = new System.Windows.Shapes.Ellipse
             {
                 Width = markerSize,
                 Height = markerSize,
-                Fill = Brushes.Transparent,
-                Stroke = new SolidColorBrush(strokeColor),
+                Fill = System.Windows.Media.Brushes.Transparent,
+                Stroke = new System.Windows.Media.SolidColorBrush(strokeColor),
                 StrokeThickness = strokeThickness,
                 IsHitTestVisible = true,
                 Tag = "hydrant_outline"
@@ -187,13 +233,13 @@ namespace EWS_NSK_WPF.Helpers
             canvas.Children.Add(ellipseOutline);
 
             // Линия (привязка к трубе)
-            var line = new Line
+            var line = new System.Windows.Shapes.Line
             {
                 X1 = -markerSize * 0.2,
                 Y1 = markerSize / 2,
                 X2 = markerSize * 1.2,
                 Y2 = markerSize / 2,
-                Stroke = new SolidColorBrush(strokeColor),
+                Stroke = new System.Windows.Media.SolidColorBrush(strokeColor),
                 StrokeThickness = strokeThickness * 0.8,
                 Tag = "hydrant_line"
             };
@@ -201,17 +247,17 @@ namespace EWS_NSK_WPF.Helpers
             Canvas.SetTop(line, 0);
             canvas.Children.Add(line);
 
-            // Текст с номером и диаметром
-            var textBlock = new TextBlock
+            // Текст с номером и диаметром (с префиксом "пг-")
+            var textBlock = new System.Windows.Controls.TextBlock
             {
-                Text = $"{number} {truba}".Trim(),
+                Text = $"пг-{number} {truba}".Trim(), // <-- ТВОЙ ПРЕФИКС НА МЕСТЕ!
                 FontSize = 10 * textScale,
-                Foreground = Brushes.Black,
-                Background = new SolidColorBrush(Color.FromArgb(230, 255, 255, 255)),
-                Padding = new Thickness(4 * textScale, 2 * textScale, 4 * textScale, 2 * textScale),
-                TextAlignment = TextAlignment.Left,
+                Foreground = System.Windows.Media.Brushes.Black,
+                Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromArgb(230, 255, 255, 255)),
+                Padding = new System.Windows.Thickness(4 * textScale, 2 * textScale, 4 * textScale, 2 * textScale),
+                TextAlignment = System.Windows.TextAlignment.Left,
                 Tag = "hydrant_text",
-                Visibility = showText ? Visibility.Visible : Visibility.Collapsed
+                Visibility = showText ? System.Windows.Visibility.Visible : System.Windows.Visibility.Collapsed
             };
             Canvas.SetLeft(textBlock, markerSize + 10 * textScale);
             Canvas.SetTop(textBlock, markerSize / 2 - 8 * textScale);

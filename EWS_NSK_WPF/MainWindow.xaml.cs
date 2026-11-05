@@ -130,7 +130,7 @@ namespace EWS_NSK_WPF
             {
                 if (EnsureAuthorized())
                 {
-                    MapWindow mapWindow = new MapWindow(currentUserFullName, currentUserPosition, "г. Новосибирск", WindowMode.View);
+                    MapWindow mapWindow = new MapWindow(currentUserFullName, currentUserPosition, "г. Новосибирск", WindowMode.View, currentUserRole);
                     mapWindow.Owner = this;
                     mapWindow.Show();
                 }
@@ -236,8 +236,16 @@ namespace EWS_NSK_WPF
             {
                 if (!EnsureAuthorized()) return;
                 string mode = (text == "Редактирование") ? "Edit" : "View";
-                MapWindow mapWindow = new MapWindow(currentUserFullName, currentUserPosition, "г. Новосибирск",
-                    mode == "Edit" ? WindowMode.Edit : WindowMode.View);
+
+                // Добавляем currentUserRole в конец конструктора
+                MapWindow mapWindow = new MapWindow(
+                    currentUserFullName,
+                    currentUserPosition,
+                    "г. Новосибирск",
+                    mode == "Edit" ? WindowMode.Edit : WindowMode.View,
+                    currentUserRole // <--- ВОТ ЭТО ДОБАВЛЯЕМ
+                );
+
                 mapWindow.Owner = this;
                 mapWindow.Show();
             }

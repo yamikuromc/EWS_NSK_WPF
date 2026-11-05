@@ -14,6 +14,8 @@
         <SolidColorBrush x:Key="InputBackground" Color="#FFFFFF"/>
         <SolidColorBrush x:Key="InputForeground" Color="#000000"/>
         <SolidColorBrush x:Key="InputBorderBrush" Color="#CCCCCC"/>
+        
+        <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
 
         <!-- УМНЫЙ ПОЛЗУНОК ДЛЯ ВСЕГО ПРИЛОЖЕНИЯ (вертикальный) -->
         <Style TargetType="ScrollBar">

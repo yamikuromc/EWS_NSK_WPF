@@ -43,7 +43,7 @@
         public int EwsDisplay { get; set; }
         public int EwsBindDisplay { get; set; }
 
-        // === ВЫЧИСЛЯЕМЫЕ ПОЛЯ ===
+        // === ВЫЧИСЛЯЕМЫЕ ПОЛЯ И ДАННЫЕ ИЗ СПРАВОЧНИКОВ ===
         public int MarkerId { get; set; }
 
         // Отображаемый номер гидранта
@@ -52,7 +52,7 @@
         // Диаметр трубы (будем заполнять из справочника)
         public string PipeInfo { get; set; } = "";
 
-        // Адрес
+        // Адрес (вычисляемое поле)
         public string AddressText => !string.IsNullOrEmpty(EwsStateNote)
             ? EwsStateNote
             : (!string.IsNullOrEmpty(EwsHouseNumber) ? $"д. {EwsHouseNumber}" : "");
@@ -62,6 +62,13 @@
 
         // Название организации/владельца (из справочника)
         public string OwnerName { get; set; } = "";
+
+        // === НОВЫЕ ПОЛЯ ДЛЯ ПОИСКА ПО АДРЕСУ (из справочника tbl_RS4_AddressObject) ===
+        // Название адресного объекта (улицы, микрорайона, переулка)
+        public string AddressObjectName { get; set; } = "";
+
+        // Полный административный адрес (например: "г. Новосибирск, мкр. Стрижи")
+        public string AddressObjectAdm { get; set; } = "";
 
         // Зона
         public int? ZoneId { get; set; }

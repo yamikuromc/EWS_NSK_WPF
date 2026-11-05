@@ -15,12 +15,12 @@
         </Grid.RowDefinitions>
 
         <!-- Компактная шапка -->
-        <Border Grid.Row="0" Background="#1E1E1E" Padding="10,8" CornerRadius="5" Margin="0,0,0,10">
+        <Border Grid.Row="0" x:Name="HeaderBorder" Background="#1E1E1E" Padding="10,8" CornerRadius="5" Margin="0,0,0,10">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="300"/>
+                    <ColumnDefinition Width="350"/>
                 </Grid.ColumnDefinitions>
 
                 <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
@@ -39,25 +39,46 @@
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
-                    <TextBox x:Name="SearchTextBox" 
-                             Grid.Column="0"
-                             Height="28" 
-                             FontSize="12"
-                             VerticalContentAlignment="Center"
-                             Background="White"
-                             BorderBrush="#555"
-                             Padding="5,3"/>
+
+                        <TextBox x:Name="SearchTextBox" 
+                         Grid.Column="0"
+                         Height="28" 
+                         FontSize="12"
+                         VerticalContentAlignment="Center"
+                         Background="White"
+                         Foreground="Black"
+                         BorderBrush="#555"
+                         Padding="5,3"
+                         ToolTip="Введите номер, адрес или координаты"
+                         KeyDown="SearchTextBox_KeyDown"/>  
+
                     <Button Grid.Column="1"
                             Content="🔍"
                             Width="32" Height="28"
                             Margin="5,0,0,0"
-                            Background="#FFA500"
+                            Background="#4CAF50"
                             Foreground="White"
                             FontWeight="Bold"
                             FontSize="14"
                             BorderBrush="Transparent"
-                            ToolTip="Поиск по адресу или координатам"/>
+                            Cursor="Hand"
+                            Click="SearchHydrant_Click"
+                            ToolTip="Поиск"/>
+
+                    <Button Grid.Column="2"
+                            Content="✖"
+                            Width="32" Height="28"
+                            Margin="5,0,0,0"
+                            Background="#003C78"
+                            Foreground="White"
+                            FontWeight="Bold"
+                            FontSize="14"
+                            BorderBrush="Transparent"
+                            Cursor="Hand"
+                            Click="ClearSearch_Click"
+                            ToolTip="Очистить"/>
                 </Grid>
             </Grid>
         </Border>
@@ -69,28 +90,30 @@
                          BorderBrush="Orange" 
                          BorderThickness="2"/>
 
-        <!-- ПАНЕЛЬ УПРАВЛЕНИЯ (как в Яндекс.Картах) -->
+        <!-- Панель управления -->
         <StackPanel Grid.Row="1" 
                     HorizontalAlignment="Right" 
                     VerticalAlignment="Bottom" 
                     Margin="0,0,20,20">
 
-            <!-- Кнопки зума -->
-            <Border Background="White" CornerRadius="8" Padding="5" Margin="0,0,0,10">
+            <!-- Кнопки зума (ДОБАВЛЕНЫ x:Name) -->
+            <Border x:Name="ZoomButtonsBorder" Background="White" CornerRadius="8" Padding="5" Margin="0,0,0,10">
                 <StackPanel>
-                    <Button Content="+" 
+                    <Button x:Name="ZoomInButton" Content="+" 
                             Width="40" Height="40" 
                             FontSize="20" FontWeight="Bold"
                             Background="White" 
                             BorderBrush="#DDD"
+                            Foreground="Black"
                             Cursor="Hand"
                             Click="ZoomIn_Click"
                             ToolTip="Приблизить"/>
-                    <Button Content="−" 
+                    <Button x:Name="ZoomOutButton" Content="−" 
                             Width="40" Height="40" 
                             FontSize="20" FontWeight="Bold"
                             Background="White" 
                             BorderBrush="#DDD"
+                            Foreground="Black"
                             Margin="0,5,0,0"
                             Cursor="Hand"
                             Click="ZoomOut_Click"
@@ -98,13 +121,14 @@
                 </StackPanel>
             </Border>
 
-            <!-- Кнопка "Домой" -->
-            <Border Background="White" CornerRadius="8" Padding="5">
-                <Button Content="🏠" 
+            <!-- Кнопка "Домой" (ДОБАВЛЕНЫ x:Name) -->
+            <Border x:Name="HomeButtonBorder" Background="White" CornerRadius="8" Padding="5">
+                <Button x:Name="HomeButton" Content="🏠" 
                         Width="40" Height="40" 
                         FontSize="18"
                         Background="White" 
                         BorderBrush="#DDD"
+                        Foreground="Black"
                         Cursor="Hand"
                         Click="GoHome_Click"
                         ToolTip="Вернуться к центру Новосибирска"/>
