@@ -1,8 +1,9 @@
-﻿using System;
+﻿using EWS_NSK_WPF.Models;
+using EWS_NSK_WPF.ViewModels;
+using System;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using EWS_NSK_WPF.ViewModels;
 
 namespace EWS_NSK_WPF
 {
@@ -83,5 +84,6 @@ namespace EWS_NSK_WPF
         public string AuthorizedPosition => ((AuthViewModel)DataContext).AuthorizedPosition;
         public int UserRole => ((AuthViewModel)DataContext).UserRole;
         public int StaffId => ((AuthViewModel)DataContext).StaffId;
+        public FireStation UserStation => ((AuthViewModel)DataContext).UserStation;
     }
 }

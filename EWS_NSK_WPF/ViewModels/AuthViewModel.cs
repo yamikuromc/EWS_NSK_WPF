@@ -1,8 +1,11 @@
 ﻿using EWS_NSK_WPF.Core;
+using EWS_NSK_WPF.Models; // <-- ДОБАВЛЕНО: для доступа к классу FireStation
 using System;
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using Microsoft.Data.Sqlite; // <-- ДОБАВЛЕНО: для работы с БД
 
 namespace EWS_NSK_WPF.ViewModels
 {
@@ -12,7 +15,7 @@ namespace EWS_NSK_WPF.ViewModels
         private string _errorMessage;
         private bool _isSuccess;
         private bool _hasPassword;
-        private DateTime? _selectedDate = DateTime.Today; // Дата по умолчанию
+        private DateTime? _selectedDate = DateTime.Today;
 
         public string Login
         {
@@ -49,6 +52,9 @@ namespace EWS_NSK_WPF.ViewModels
         public int UserRole { get; private set; }
         public int StaffId { get; private set; }
 
+        // === НОВОЕ: Данные пожарной части пользователя ===
+        public FireStation UserStation { get; private set; }
+
         public RelayCommand LoginCommand { get; }
         public RelayCommand CancelCommand { get; }
 
@@ -84,6 +90,10 @@ namespace EWS_NSK_WPF.ViewModels
                     AuthorizedPosition = authResult.Position;
                     UserRole = authResult.Role;
                     StaffId = authResult.StaffId;
+
+                    // === НОВОЕ: Загружаем пожарную часть пользователя ===
+                    UserStation = LoadUserStation();
+
                     IsSuccess = true;
                 }
                 else
@@ -94,6 +104,46 @@ namespace EWS_NSK_WPF.ViewModels
                     IsSuccess = false;
                 }
             }
+        }
+
+        // === НОВЫЙ МЕТОД: Загрузка данных пожарной части из БД ===
+        private FireStation LoadUserStation()
+        {
+            string dbPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources", "INPPV.db");
+            try
+            {
+                using var conn = new SqliteConnection($"Data Source={dbPath}");
+                conn.Open();
+
+                var cmd = conn.CreateCommand();
+                cmd.CommandText = @"
+                    SELECT fs.StationId, fs.StationName, fs.CenterLat, fs.CenterLng, fs.RadiusMeters, fs.Address
+                    FROM tbl_Auth_Users u
+                    JOIN FireStations fs ON u.StationId = fs.StationId
+                    WHERE u.Login = @login";
+
+                cmd.Parameters.AddWithValue("@login", Login);
+
+                using var reader = cmd.ExecuteReader();
+                if (reader.Read())
+                {
+                    return new FireStation
+                    {
+                        StationId = Convert.ToInt32(reader["StationId"]),
+                        StationName = reader["StationName"]?.ToString() ?? "Неизвестная часть",
+                        CenterLat = Convert.ToDouble(reader["CenterLat"]),
+                        CenterLng = Convert.ToDouble(reader["CenterLng"]),
+                        RadiusMeters = Convert.ToDouble(reader["RadiusMeters"]),
+                        Address = reader["Address"]?.ToString() ?? ""
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"⚠ Ошибка загрузки ПСЧ: {ex.Message}");
+            }
+
+            return null; // Если у пользователя нет части, вернем null
         }
 
         private void ExecuteCancel(object parameter)

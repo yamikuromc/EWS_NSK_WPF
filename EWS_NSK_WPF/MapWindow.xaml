@@ -79,6 +79,12 @@
                             Cursor="Hand"
                             Click="ClearSearch_Click"
                             ToolTip="Очистить"/>
+                    <!--<Button x:Name="ClearCacheButton" 
+                            Content="🗑 Кэш" 
+                            Width="60" Height="28" Margin="5,0,0,0"
+                            ToolTip="Очистить кэш геокодинга"
+                            Click="ClearCacheButton_Click"
+                            Background="LightGray" BorderBrush="Gray"/>--> 
                 </Grid>
             </Grid>
         </Border>

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using EWS_NSK_WPF.Models;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Windows;
@@ -17,7 +18,8 @@ namespace EWS_NSK_WPF
         private string currentUserPosition = "Гость";
         private int currentUserRole = 0;       //  Роль пользователя
         private int currentStaffId = 0;        //  ID сотрудника
-        
+        private FireStation _userStation;
+
         public MainWindow()
         {
             InitializeComponent();
@@ -55,6 +57,7 @@ namespace EWS_NSK_WPF
                     currentUserPosition = authWindow.AuthorizedPosition;
                     currentUserRole = authWindow.UserRole;   // ← ДОБАВЛЕНО
                     currentStaffId = authWindow.StaffId;     // ← ДОБАВЛЕНО
+                    _userStation = authWindow.UserStation;
 
                     UserStatusCombo.Items.Clear();
                     UserStatusCombo.Items.Add(currentUserPosition);
@@ -130,7 +133,7 @@ namespace EWS_NSK_WPF
             {
                 if (EnsureAuthorized())
                 {
-                    MapWindow mapWindow = new MapWindow(currentUserFullName, currentUserPosition, "г. Новосибирск", WindowMode.View, currentUserRole);
+                    MapWindow mapWindow = new MapWindow(currentUserFullName, currentUserPosition, "г. Новосибирск", WindowMode.View, currentUserRole, _userStation);
                     mapWindow.Owner = this;
                     mapWindow.Show();
                 }
@@ -239,11 +242,12 @@ namespace EWS_NSK_WPF
 
                 // Добавляем currentUserRole в конец конструктора
                 MapWindow mapWindow = new MapWindow(
-                    currentUserFullName,
-                    currentUserPosition,
-                    "г. Новосибирск",
-                    mode == "Edit" ? WindowMode.Edit : WindowMode.View,
-                    currentUserRole // <--- ВОТ ЭТО ДОБАВЛЯЕМ
+    currentUserFullName,
+    currentUserPosition,
+    "г. Новосибирск",
+    mode == "Edit" ? WindowMode.Edit : WindowMode.View,
+    currentUserRole,
+    _userStation // <--- ДОБАВИТЬ ЗДЕСЬ
                 );
 
                 mapWindow.Owner = this;
