@@ -16,6 +16,12 @@ namespace EWS_NSK_WPF
 {
     public partial class MapWindow : Window
     {
+        // Публичный метод для центрирования карты на координатах извне
+        public void CenterOnCoordinates(double lat, double lng, int zoom = 16)
+        {
+            MainMap.Position = new PointLatLng(lat, lng);
+            MainMap.Zoom = zoom;
+        }
         private EwsMapDataService? _ewsService;
         private int currentUserRole;
         private List<Ewss> _allHydrants = new List<Ewss>();

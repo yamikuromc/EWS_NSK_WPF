@@ -49,11 +49,8 @@ namespace EWS_NSK_WPF.Services
             {
                 System.Diagnostics.Debug.WriteLine($"🌐 Запрос к Nominatim: {address}");
 
-                // ОГРАНИЧИВАЕМ ПОИСК СТРОГО РАМКАМИ (Краснообск + ближайшие микрорайоны)
-                // viewbox=minLon,minLat,maxLon,maxLat
-                // bounded=1 заставляет искать ТОЛЬКО внутри этой рамки
-                string url = $"https://nominatim.openstreetmap.org/search?format=json&q={Uri.EscapeDataString(address)}" +
-                             $"&viewbox=82.95,54.90,83.05,54.96&bounded=1&limit=1&countrycodes=ru";
+                // Расширили рамку на весь Новосибирский район и убрали жесткое ограничение (bounded=0)
+                string url = $"https://nominatim.openstreetmap.org/search?format=json&q={Uri.EscapeDataString(address)}&viewbox=82.50,54.80,83.50,55.30&bounded=0&limit=1&countrycodes=ru";
 
                 var response = await _httpClient.GetStringAsync(url);
                 var results = JsonSerializer.Deserialize<NominatimResult[]>(response);

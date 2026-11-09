@@ -250,7 +250,7 @@ namespace EWS_NSK_WPF.Helpers
             // Текст с номером и диаметром (с префиксом "пг-")
             var textBlock = new System.Windows.Controls.TextBlock
             {
-                Text = $"пг-{number} {truba}".Trim(), // <-- ТВОЙ ПРЕФИКС НА МЕСТЕ!
+                Text = $"ПГ-{number} {truba}".Trim(),
                 FontSize = 10 * textScale,
                 Foreground = System.Windows.Media.Brushes.Black,
                 Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromArgb(230, 255, 255, 255)),

@@ -13,6 +13,7 @@ namespace EWS_NSK_WPF
         {
             InitializeComponent();
             ApplyTheme();
+            LoginBox.Focus();
 
             if (DataContext is AuthViewModel vm)
             {
