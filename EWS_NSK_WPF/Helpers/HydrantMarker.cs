@@ -1,12 +1,12 @@
-﻿using System.Windows;
+﻿using System.Linq;
+using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
 using GMap.NET;
 using GMap.NET.WindowsPresentation;
 using EWS_NSK_WPF.Models;
-using System.Windows.Input;
-using System.Linq;
 
 namespace EWS_NSK_WPF.Helpers
 {
@@ -17,27 +17,28 @@ namespace EWS_NSK_WPF.Helpers
         /// </summary>
         public static GMapMarker CreateMarker(Ewss hydrant, int currentZoom, int userRole)
         {
-            // Размер маркера зависит от зума
             double markerSize = GetMarkerSize(currentZoom);
             double strokeThickness = GetStrokeThickness(currentZoom);
             bool showText = ShouldShowText(currentZoom);
             double textScale = GetTextScale(currentZoom);
 
-            // Получаем цвета по статусу
             var (fillColor, strokeColor) = MarkerColorHelper.GetColorsForStatus(hydrant.EwsStatusCod, hydrant.StatusName);
 
-            // Создаём Canvas с маркером
-            var canvas = CreateMarkerCanvas(
-         markerSize, strokeThickness, showText, textScale,
-         fillColor, strokeColor,
-         hydrant.DisplayNumber, hydrant.PipeInfo, hydrant, userRole); // <-- Передаём hydrant и userRole
-
+            // 1. СНАЧАЛА создаем маркер (чтобы передать его в CreateMarkerCanvas)
             var marker = new GMapMarker(new PointLatLng(hydrant.LatitudeD, hydrant.LongitudeD))
             {
-                Shape = canvas,
                 Offset = new Point(-markerSize / 2, -markerSize / 2),
                 Tag = hydrant.MarkerId
             };
+
+            // 2. Создаем Canvas, передавая ему ссылку на созданный маркер
+            var canvas = CreateMarkerCanvas(
+                markerSize, strokeThickness, showText, textScale,
+                fillColor, strokeColor,
+                hydrant.DisplayNumber, hydrant.PipeInfo, hydrant, userRole, marker);
+
+            // 3. Назначаем Canvas как Shape маркера
+            marker.Shape = canvas;
 
             return marker;
         }
@@ -54,13 +55,10 @@ namespace EWS_NSK_WPF.Helpers
             bool showText = ShouldShowText(zoomLevel);
             double strokeThickness = GetStrokeThickness(zoomLevel);
 
-            // Обновляем половину эллипса
-            var halfEllipse = canvas.Children.OfType<Path>()
-                .FirstOrDefault(p => p.Tag as string == "hydrant_half");
+            var halfEllipse = canvas.Children.OfType<Path>().FirstOrDefault(p => p.Tag as string == "hydrant_half");
             if (halfEllipse != null)
                 halfEllipse.Data = CreateHalfEllipseGeometry(markerSize);
 
-            // Обновляем контур эллипса
             var ellipseOutline = canvas.Children.OfType<Ellipse>().FirstOrDefault();
             if (ellipseOutline != null)
             {
@@ -69,7 +67,6 @@ namespace EWS_NSK_WPF.Helpers
                 ellipseOutline.StrokeThickness = strokeThickness;
             }
 
-            // Обновляем линию
             var line = canvas.Children.OfType<Line>().FirstOrDefault();
             if (line != null)
             {
@@ -80,9 +77,7 @@ namespace EWS_NSK_WPF.Helpers
                 line.StrokeThickness = strokeThickness * 0.8;
             }
 
-            // Обновляем текст
-            var textBlock = canvas.Children.OfType<TextBlock>()
-                .FirstOrDefault(tb => tb.Tag as string == "hydrant_text");
+            var textBlock = canvas.Children.OfType<TextBlock>().FirstOrDefault(tb => tb.Tag as string == "hydrant_text");
             if (textBlock != null)
             {
                 if (showText)
@@ -103,8 +98,27 @@ namespace EWS_NSK_WPF.Helpers
         }
 
         /// <summary>
-        /// Размер маркера в зависимости от зума
+        /// Мгновенно обновляет цвета маркера при изменении статуса (вызывается из ViewModel)
         /// </summary>
+        public static void UpdateMarkerColors(GMapMarker marker, Ewss hydrant)
+        {
+            if (marker?.Shape is not Canvas canvas) return;
+
+            var (fillColor, strokeColor) = MarkerColorHelper.GetColorsForStatus(hydrant.EwsStatusCod, hydrant.StatusName);
+
+            var halfEllipse = canvas.Children.OfType<Path>().FirstOrDefault(p => p.Tag as string == "hydrant_half");
+            if (halfEllipse != null)
+                halfEllipse.Fill = new SolidColorBrush(fillColor);
+
+            var ellipseOutline = canvas.Children.OfType<Ellipse>().FirstOrDefault();
+            if (ellipseOutline != null)
+                ellipseOutline.Stroke = new SolidColorBrush(strokeColor);
+
+            var line = canvas.Children.OfType<Line>().FirstOrDefault();
+            if (line != null)
+                line.Stroke = new SolidColorBrush(strokeColor);
+        }
+
         private static double GetMarkerSize(int zoom)
         {
             return zoom switch
@@ -115,7 +129,7 @@ namespace EWS_NSK_WPF.Helpers
                 15 => 16,
                 16 => 18,
                 17 => 22,
-                _ => 26   
+                _ => 26
             };
         }
 
@@ -140,7 +154,7 @@ namespace EWS_NSK_WPF.Helpers
         private static Canvas CreateMarkerCanvas(
             double markerSize, double strokeThickness, bool showText, double textScale,
             Color fillColor, Color strokeColor, string number, string truba,
-            Ewss hydrant, int userRole) // <-- ДОБАВЛЕНЫ ПАРАМЕТРЫ
+            Ewss hydrant, int userRole, GMapMarker marker) // <-- ДОБАВЛЕН ПАРАМЕТР marker
         {
             var canvas = new Canvas
             {
@@ -150,67 +164,60 @@ namespace EWS_NSK_WPF.Helpers
             };
             Panel.SetZIndex(canvas, 1000);
 
-            // 1. ДВОЙНОЙ КЛИК: Открытие окна свойств (через MouseLeftButtonDown и ClickCount)
+            // 1. ДВОЙНОЙ КЛИК: Открытие окна свойств
             canvas.MouseLeftButtonDown += (s, e) =>
             {
-                if (e.ClickCount == 2) // Проверяем, что это именно двойной клик
+                if (e.ClickCount == 2)
                 {
                     var detailsWindow = new HydrantDetailsWindow(hydrant, userRole);
-                    detailsWindow.Owner = System.Windows.Application.Current.MainWindow;
+                    detailsWindow.Owner = Application.Current.MainWindow;
+
+                    // 🎯 ПОДПИСКА НА МГНОВЕННУЮ ПЕРЕКРАСКУ
+                    if (detailsWindow.ViewModel != null)
+                    {
+                        detailsWindow.ViewModel.OnStatusChanged = (updatedHydrant) =>
+                        {
+                            HydrantMarker.UpdateMarkerColors(marker, updatedHydrant);
+                        };
+                    }
+
                     detailsWindow.ShowDialog();
                     e.Handled = true;
                 }
             };
 
             // 2. ПРАВЫЙ КЛИК: Контекстное меню
-            var contextMenu = new System.Windows.Controls.ContextMenu();
+            var contextMenu = new ContextMenu();
 
-            var propertiesMenuItem = new System.Windows.Controls.MenuItem
-            {
-                Header = "📋 Свойства гидранта",
-                FontSize = 12
-            };
+            var propertiesMenuItem = new MenuItem { Header = "📋 Свойства гидранта", FontSize = 12 };
             propertiesMenuItem.Click += (s, e) =>
             {
                 var detailsWindow = new HydrantDetailsWindow(hydrant, userRole);
-                detailsWindow.Owner = System.Windows.Application.Current.MainWindow;
+                detailsWindow.Owner = Application.Current.MainWindow;
                 detailsWindow.ShowDialog();
             };
             contextMenu.Items.Add(propertiesMenuItem);
-            contextMenu.Items.Add(new System.Windows.Controls.Separator());
+            contextMenu.Items.Add(new Separator());
 
-            var copyCoordsMenuItem = new System.Windows.Controls.MenuItem
-            {
-                Header = "📍 Копировать координаты",
-                FontSize = 12
-            };
+            var copyCoordsMenuItem = new MenuItem { Header = "📍 Копировать координаты", FontSize = 12 };
             copyCoordsMenuItem.Click += (s, e) =>
             {
-                System.Windows.Clipboard.SetText($"{hydrant.LatitudeD}, {hydrant.LongitudeD}");
-                System.Windows.MessageBox.Show("Координаты скопированы в буфер обмена!", "Успех", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
+                Clipboard.SetText($"{hydrant.LatitudeD}, {hydrant.LongitudeD}");
+                MessageBox.Show("Координаты скопированы в буфер обмена!", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
             };
             contextMenu.Items.Add(copyCoordsMenuItem);
 
             canvas.ContextMenu = contextMenu;
 
-            // При наведении мыши — поднимаем маркер на передний план
-            canvas.MouseEnter += (s, e) =>
-            {
-                Panel.SetZIndex(canvas, 10000); // Высокий ZIndex — маркер поверх всех
-            };
-
-            // Когда мышь уходит — возвращаем обычный ZIndex
-            canvas.MouseLeave += (s, e) =>
-            {
-                Panel.SetZIndex(canvas, 1000);
-            };
+            canvas.MouseEnter += (s, e) => Panel.SetZIndex(canvas, 10000);
+            canvas.MouseLeave += (s, e) => Panel.SetZIndex(canvas, 1000);
 
             // Половина эллипса (заполненная)
-            var halfEllipse = new System.Windows.Shapes.Path
+            var halfEllipse = new Path
             {
                 Data = CreateHalfEllipseGeometry(markerSize),
-                Fill = new System.Windows.Media.SolidColorBrush(fillColor),
-                Stroke = System.Windows.Media.Brushes.Transparent,
+                Fill = new SolidColorBrush(fillColor),
+                Stroke = Brushes.Transparent,
                 Tag = "hydrant_half"
             };
             Canvas.SetLeft(halfEllipse, 0);
@@ -218,12 +225,12 @@ namespace EWS_NSK_WPF.Helpers
             canvas.Children.Add(halfEllipse);
 
             // Контур эллипса
-            var ellipseOutline = new System.Windows.Shapes.Ellipse
+            var ellipseOutline = new Ellipse
             {
                 Width = markerSize,
                 Height = markerSize,
-                Fill = System.Windows.Media.Brushes.Transparent,
-                Stroke = new System.Windows.Media.SolidColorBrush(strokeColor),
+                Fill = Brushes.Transparent,
+                Stroke = new SolidColorBrush(strokeColor),
                 StrokeThickness = strokeThickness,
                 IsHitTestVisible = true,
                 Tag = "hydrant_outline"
@@ -233,13 +240,13 @@ namespace EWS_NSK_WPF.Helpers
             canvas.Children.Add(ellipseOutline);
 
             // Линия (привязка к трубе)
-            var line = new System.Windows.Shapes.Line
+            var line = new Line
             {
                 X1 = -markerSize * 0.2,
                 Y1 = markerSize / 2,
                 X2 = markerSize * 1.2,
                 Y2 = markerSize / 2,
-                Stroke = new System.Windows.Media.SolidColorBrush(strokeColor),
+                Stroke = new SolidColorBrush(strokeColor),
                 StrokeThickness = strokeThickness * 0.8,
                 Tag = "hydrant_line"
             };
@@ -247,17 +254,17 @@ namespace EWS_NSK_WPF.Helpers
             Canvas.SetTop(line, 0);
             canvas.Children.Add(line);
 
-            // Текст с номером и диаметром (с префиксом "пг-")
-            var textBlock = new System.Windows.Controls.TextBlock
+            // Текст с номером и диаметром
+            var textBlock = new TextBlock
             {
                 Text = $"ПГ-{number} {truba}".Trim(),
                 FontSize = 10 * textScale,
-                Foreground = System.Windows.Media.Brushes.Black,
-                Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromArgb(230, 255, 255, 255)),
-                Padding = new System.Windows.Thickness(4 * textScale, 2 * textScale, 4 * textScale, 2 * textScale),
-                TextAlignment = System.Windows.TextAlignment.Left,
+                Foreground = Brushes.Black,
+                Background = new SolidColorBrush(Color.FromArgb(230, 255, 255, 255)),
+                Padding = new Thickness(4 * textScale, 2 * textScale, 4 * textScale, 2 * textScale),
+                TextAlignment = TextAlignment.Left,
                 Tag = "hydrant_text",
-                Visibility = showText ? System.Windows.Visibility.Visible : System.Windows.Visibility.Collapsed
+                Visibility = showText ? Visibility.Visible : Visibility.Collapsed
             };
             Canvas.SetLeft(textBlock, markerSize + 10 * textScale);
             Canvas.SetTop(textBlock, markerSize / 2 - 8 * textScale);
@@ -267,7 +274,7 @@ namespace EWS_NSK_WPF.Helpers
         }
 
         /// <summary>
-        /// Создаёт геометрию половины эллипса (как в ZoneHydrantEditor)
+        /// Создаёт геометрию половины эллипса
         /// </summary>
         private static Geometry CreateHalfEllipseGeometry(double size)
         {

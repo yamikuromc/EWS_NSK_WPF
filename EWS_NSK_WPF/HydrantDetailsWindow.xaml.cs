@@ -7,9 +7,11 @@ namespace EWS_NSK_WPF
 {
     public partial class HydrantDetailsWindow : Window
     {
+        // Делаем ViewModel публичным, чтобы MapWindow мог на него подписаться
+        public HydrantDetailsViewModel ViewModel { get; private set; }
+
         public HydrantDetailsWindow(Ewss hydrant, int userRole)
         {
-            // 1. СНАЧАЛА загружаем тему
             string themePath = ThemeManager.IsDarkTheme
                 ? "Themes/DarkTheme.xaml"
                 : "Themes/LightTheme.xaml";
@@ -19,11 +21,10 @@ namespace EWS_NSK_WPF
                 Source = new Uri(themePath, UriKind.Relative)
             });
 
-            // 2. ПОТОМ инициализируем компоненты
             InitializeComponent();
 
-            // 3. И только потом устанавливаем DataContext
-            DataContext = new HydrantDetailsViewModel(hydrant, userRole);
+            ViewModel = new HydrantDetailsViewModel(hydrant, userRole);
+            DataContext = ViewModel;
         }
     }
 }

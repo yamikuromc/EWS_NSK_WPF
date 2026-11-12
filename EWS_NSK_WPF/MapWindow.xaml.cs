@@ -16,6 +16,7 @@ namespace EWS_NSK_WPF
 {
     public partial class MapWindow : Window
     {
+
         // Публичный метод для центрирования карты на координатах извне
         public void CenterOnCoordinates(double lat, double lng, int zoom = 16)
         {
@@ -29,6 +30,9 @@ namespace EWS_NSK_WPF
 
         // <--- НОВОЕ: Поле для хранения данных пожарной части пользователя
         private FireStation _userStation;
+
+        private WindowMode _requestedMode;
+        private bool _isEditMode = false;
 
         // <--- НОВОЕ: Добавлен параметр userStation в конструктор
         public MapWindow(string userName, string position, string accessLevel, WindowMode requestedMode, int userRole = 0, FireStation userStation = null)
@@ -82,6 +86,20 @@ namespace EWS_NSK_WPF
             // === 2. ЗАГРУЗКА ГИДРАНТОВ ===
             LoadHydrantsToMap();
 
+            // 🎯 НОВОЕ: Обработка режима открытия окна
+            _requestedMode = requestedMode;
+            if (_requestedMode == WindowMode.Edit && currentUserRole >= 2)
+            {
+                EnterEditMode();
+            }
+            else if (currentUserRole >= 2)
+            {
+                // Показываем кнопку входа в режим редактирования только админам
+                // (Убедись, что в XAML у кнопки EditModeToggleButton стоит Visibility="Collapsed")
+                EditModeToggleButton.Visibility = Visibility.Visible;
+            }
+
+
             this.Loaded += (s, e) => ApplyTheme();
 
             // === 3. ОСВОБОЖДЕНИЕ РЕСУРСОВ ===
@@ -103,6 +121,41 @@ namespace EWS_NSK_WPF
                 catch { }
             };
         }
+        // Метод для вызова из кода (без параметров)
+        private void EnterEditMode()
+        {
+            _isEditMode = true;
+            EditModeToggleButton.Visibility = Visibility.Collapsed;
+            EditModeActions.Visibility = Visibility.Visible;
+            UserInfoLabel.Text = $"Пользователь: ... | 🚒 {_userStation?.StationName} | ✏️ РЕЖИМ РЕДАКТИРОВАНИЯ";
+        }
+
+        // Метод-обработчик для XAML (с параметрами)
+        private void EnterEditMode_Click(object sender, RoutedEventArgs e)
+        {
+            EnterEditMode();
+        }
+
+        private void ExitEditMode_Click(object sender, RoutedEventArgs e)
+        {
+            _isEditMode = false;
+            EditModeToggleButton.Visibility = currentUserRole >= 2 ? Visibility.Visible : Visibility.Collapsed;
+            EditModeActions.Visibility = Visibility.Collapsed;
+            UserInfoLabel.Text = $"Пользователь: ... | 🚒 {_userStation?.StationName} | ✅ Загружено: {_allHydrants.Count}";
+        }
+
+        // Этот метод вызывается из HydrantDetailsViewModel при нажатии "Сохранить"
+        public void RefreshHydrantInList(Ewss updatedHydrant)
+        {
+            var existing = _allHydrants.FirstOrDefault(h => h.MarkerId == updatedHydrant.MarkerId);
+            if (existing != null)
+            {
+                existing.EwsStatusCod = updatedHydrant.EwsStatusCod;
+                existing.StatusName = updatedHydrant.StatusName;
+                // Здесь можно добавить обновление других полей, если админ их менял
+            }
+        }
+        
 
         private void LoadHydrantsToMap()
         {
@@ -472,14 +525,28 @@ namespace EWS_NSK_WPF
                         if (foundHydrant != null) System.Diagnostics.Debug.WriteLine($"✅ Найдено по номеру! Гидрант №{foundHydrant.DisplayNumber}");
                     }
                 }
-
                 // === 3. РЕЗУЛЬТАТ ===
                 if (foundHydrant != null)
                 {
                     MainMap.Position = new PointLatLng(foundHydrant.LatitudeD, foundHydrant.LongitudeD);
                     MainMap.Zoom = 17;
+
                     var detailsWindow = new HydrantDetailsWindow(foundHydrant, currentUserRole);
                     detailsWindow.Owner = this;
+
+                    // 🎯 ПОДПИСКА НА МГНОВЕННУЮ ПЕРЕКРАСКУ (при поиске)
+                    if (detailsWindow.ViewModel != null)
+                    {
+                        detailsWindow.ViewModel.OnStatusChanged = (updatedHydrant) =>
+                        {
+                            var marker = MainMap.Markers.FirstOrDefault(m => m.Tag as int? == updatedHydrant.MarkerId);
+                            if (marker != null)
+                            {
+                                HydrantMarker.UpdateMarkerColors(marker, updatedHydrant);
+                            }
+                        };
+                    }
+
                     detailsWindow.ShowDialog();
                 }
                 else

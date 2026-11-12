@@ -21,10 +21,26 @@
                             <TextBlock Text="Номер / Название" FontSize="11" Foreground="{DynamicResource LabelForeground}"/>
                             <TextBox Text="{Binding Hydrant.DisplayNumber, Mode=OneWay}" IsReadOnly="True" Style="{StaticResource ReadOnlyTextBoxStyle}"/>
                         </StackPanel>
+
                         <StackPanel Margin="10,0,0,10">
                             <TextBlock Text="Статус" FontSize="11" Foreground="{DynamicResource LabelForeground}"/>
-                            <TextBox Text="{Binding Hydrant.StatusName, Mode=OneWay}" IsReadOnly="True" Style="{StaticResource ReadOnlyTextBoxStyle}"/>
+
+                            <!-- ComboBox только для редактирования -->
+                            <ComboBox ItemsSource="{Binding AvailableStatuses}" 
+          DisplayMemberPath="Name" 
+          SelectedValuePath="Code"
+          SelectedValue="{Binding SelectedStatusCode, Mode=TwoWay}"
+          Background="White" 
+          Foreground="Black"
+          BorderBrush="{DynamicResource InputBorderBrush}" 
+          Padding="5,3" Height="28"
+          Visibility="{Binding CanEdit, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                            <!-- TextBox только для просмотра -->
+                            <TextBox Text="{Binding Hydrant.StatusName, Mode=OneWay}" IsReadOnly="True" 
+             Style="{StaticResource ReadOnlyTextBoxStyle}"
+             Visibility="{Binding CanEdit, Converter={StaticResource InverseBoolToVisibilityConverter}}"/>
                         </StackPanel>
+                        
                         <StackPanel Margin="0,0,10,10">
                             <TextBlock Text="Адрес (объект)" FontSize="11" Foreground="{DynamicResource LabelForeground}"/>
                             <TextBox Text="{Binding Hydrant.EwsAddressObjectCod}" IsReadOnly="{Binding IsReadOnly}"
