@@ -42,6 +42,13 @@ namespace EWS_NSK_WPF.Helpers
 
             return marker;
         }
+        // Находит открытое окно карты среди всех окон приложения
+        private static MapWindow FindMapWindow()
+        {
+            return System.Windows.Application.Current.Windows
+                .OfType<MapWindow>()
+                .FirstOrDefault();
+        }
 
         /// <summary>
         /// Обновляет размер маркера при изменении зума
@@ -169,15 +176,18 @@ namespace EWS_NSK_WPF.Helpers
             {
                 if (e.ClickCount == 2)
                 {
-                    var detailsWindow = new HydrantDetailsWindow(hydrant, userRole);
-                    detailsWindow.Owner = Application.Current.MainWindow;
+                    var mapWin = FindMapWindow();   // ← ПРАВИЛЬНЫЙ поиск окна карты
+                    bool mapEditMode = mapWin?.IsInEditMode ?? false;
 
-                    // 🎯 ПОДПИСКА НА МГНОВЕННУЮ ПЕРЕКРАСКУ
+                    var detailsWindow = new HydrantDetailsWindow(hydrant, userRole, mapEditMode);
+                    detailsWindow.Owner = mapWin ?? System.Windows.Application.Current.MainWindow;
+
                     if (detailsWindow.ViewModel != null)
                     {
                         detailsWindow.ViewModel.OnStatusChanged = (updatedHydrant) =>
                         {
                             HydrantMarker.UpdateMarkerColors(marker, updatedHydrant);
+                            mapWin?.MarkHydrantModified(updatedHydrant);   // ← помечаем изменения
                         };
                     }
 

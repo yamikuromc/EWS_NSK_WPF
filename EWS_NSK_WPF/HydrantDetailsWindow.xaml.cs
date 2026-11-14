@@ -10,7 +10,7 @@ namespace EWS_NSK_WPF
         // Делаем ViewModel публичным, чтобы MapWindow мог на него подписаться
         public HydrantDetailsViewModel ViewModel { get; private set; }
 
-        public HydrantDetailsWindow(Ewss hydrant, int userRole)
+        public HydrantDetailsWindow(Ewss hydrant, int userRole, bool isMapEditMode = false)
         {
             string themePath = ThemeManager.IsDarkTheme
                 ? "Themes/DarkTheme.xaml"
@@ -23,7 +23,7 @@ namespace EWS_NSK_WPF
 
             InitializeComponent();
 
-            ViewModel = new HydrantDetailsViewModel(hydrant, userRole);
+            ViewModel = new HydrantDetailsViewModel(hydrant, userRole, isMapEditMode);
             DataContext = ViewModel;
         }
     }

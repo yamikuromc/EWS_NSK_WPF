@@ -18,6 +18,7 @@ namespace EWS_NSK_WPF.ViewModels
         private Ewss _hydrant;
         private bool _isReadOnly;
         private int _selectedStatusCode;
+        private bool _isMapEditMode; // <-- НОВОЕ: запоминаем режим карты
 
         public Ewss Hydrant
         {
@@ -43,13 +44,6 @@ namespace EWS_NSK_WPF.ViewModels
             new StatusItem { Code = 4, Name = "Отсутствует / Демонтирован" }
         };
 
-        private bool _hasUnsavedChanges = false;
-
-        public bool HasUnsavedChanges
-        {
-            get => _hasUnsavedChanges;
-            private set => SetField(ref _hasUnsavedChanges, value);
-        }
         public int SelectedStatusCode
         {
             get => _selectedStatusCode;
@@ -64,7 +58,8 @@ namespace EWS_NSK_WPF.ViewModels
 
                     // Уведомляем карту, чтобы она перекрасила маркер
                     OnStatusChanged?.Invoke(Hydrant);
-                    HasUnsavedChanges = true;
+
+                  
                 }
             }
         }
@@ -73,10 +68,15 @@ namespace EWS_NSK_WPF.ViewModels
         public RelayCommand SaveCommand { get; }
         public RelayCommand CloseCommand { get; }
 
-        public HydrantDetailsViewModel(Ewss hydrant, int userRole)
+        // <-- ИЗМЕНЕНО: добавлен параметр isMapEditMode
+        public HydrantDetailsViewModel(Ewss hydrant, int userRole, bool isMapEditMode)
         {
             Hydrant = hydrant;
-            IsReadOnly = userRole < 2;
+            _isMapEditMode = isMapEditMode;
+
+            // 🚨 Блокируем редактирование, если пользователь не админ ИЛИ карта не в режиме редактирования
+            IsReadOnly = userRole < 2 || !isMapEditMode;
+
             _selectedStatusCode = hydrant.EwsStatusCod > 0 ? hydrant.EwsStatusCod : 1;
 
             SaveCommand = new RelayCommand(SaveHydrant);
@@ -85,45 +85,27 @@ namespace EWS_NSK_WPF.ViewModels
 
         private void SaveHydrant(object parameter)
         {
-            // ЗДЕСЬ ДОЛЖЕН БЫТЬ ВЫЗОВ БАЗЫ ДАННЫХ. 
-            // Пока просто имитируем успех. Данные в БД изменятся ТОЛЬКО здесь.
             MessageBox.Show($"Данные гидранта ПГ-{Hydrant.DisplayNumber} сохранены в базу!", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
 
-            // Сообщаем MapWindow, что этот гидрант нужно обновить в списке _allHydrants
             if (parameter is Window window && window.Owner is MapWindow mapWindow)
             {
                 mapWindow.RefreshHydrantInList(Hydrant);
+                // Здесь можно было бы сбросить флаг несохраненных изменений, 
+                // но для простоты оставим его до закрытия карты, чтобы пользователь точно увидел предупреждение.
             }
-            HasUnsavedChanges = false;
 
-            CloseWindow(null);
+            CloseWindow(parameter);   // ← было null, окно не закрывалось после сохранения
         }
 
         private void CloseWindow(object parameter)
         {
-            if (HasUnsavedChanges)
+            // 🚨 УБРАНО: окно предупреждения отсюда. 
+            // Теперь предупреждение будет выскакивать только при попытке закрыть САМУ КАРТУ (MapWindow),
+            // как ты и просила.
+            if (parameter is Window window)
             {
-                var result = MessageBox.Show(
-                    "У вас есть несохраненные изменения!\n\nСохранить их перед закрытием?",
-                    "Несохраненные изменения",
-                    MessageBoxButton.YesNoCancel,
-                    MessageBoxImage.Warning);
-
-                if (result == MessageBoxResult.Yes)
-                {
-                    SaveHydrant(parameter);
-                    return;
-                }
-                else if (result == MessageBoxResult.Cancel)
-                {
-                    return; // Не закрываем окно
-                }
-                // Если No - закрываем без сохранения
+                window.Close();
             }
-
-            if (parameter is Window window) window.Close();
         }
-
-
     }
 }

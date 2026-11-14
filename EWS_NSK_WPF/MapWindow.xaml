@@ -22,18 +22,35 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <!-- Левая часть: Заголовок и инфо -->
-                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                    <TextBlock x:Name="MapTitleText" 
-                               Text="КАРТА ПОЖАРНЫХ ГИДРАНТОВ" 
-                               FontSize="16" FontWeight="Bold" Foreground="Orange"
-                               VerticalAlignment="Center"/>
-                    <TextBlock Text="  |  " Foreground="Gray" FontSize="14" VerticalAlignment="Center"/>
-                    <TextBlock x:Name="UserInfoLabel" 
-                               FontSize="12" Foreground="White" 
-                               VerticalAlignment="Center"/>
-                </StackPanel>
+                <!-- Левая часть: заголовок сверху, предупреждение снизу -->
+                <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                    <!-- Строка 1: название + инфо + режим -->
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock x:Name="MapTitleText" 
+                   Text="КАРТА ПОЖАРНЫХ ГИДРАНТОВ" 
+                   FontSize="16" FontWeight="Bold" Foreground="Orange"
+                   VerticalAlignment="Center"/>
+                        <TextBlock Text="  |  " Foreground="Gray" FontSize="14" VerticalAlignment="Center"/>
+                        <TextBlock x:Name="UserInfoLabel" 
+                   FontSize="12" Foreground="White" 
+                   VerticalAlignment="Center"/>
+                        <TextBlock x:Name="EditModeIndicator" 
+                   Text=" | ✏️ РЕЖИМ РЕДАКТИРОВАНИЯ" 
+                   FontSize="12" FontWeight="Bold" Foreground="Red"
+                   VerticalAlignment="Center"
+                   Visibility="Collapsed"/>
+                    </StackPanel>
 
+                    <!-- Строка 2: предупреждение (появляется ТОЛЬКО при изменениях) -->
+                    <Border x:Name="UnsavedWarningBorder" 
+            Background="#30FF0000" BorderBrush="Red" BorderThickness="1" 
+            CornerRadius="3" Padding="6,2" Margin="0,4,0,0"
+            HorizontalAlignment="Left"
+            Visibility="Collapsed">
+                        <TextBlock Text="⚠ КОНФИГУРАЦИЯ ДАННЫХ НЕ СОХРАНЕНА!" 
+                   FontSize="11" FontWeight="Bold" Foreground="Red"/>
+                    </Border>
+                </StackPanel>
                 <!-- Правая часть: ПОИСК (цельный блок) + РЕЖИМ РЕДАКТИРОВАНИЯ -->
                 <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="10,0,0,0">
 
@@ -60,20 +77,23 @@
 
                     <!-- 4. Кнопка входа в режим редактирования (в самом конце) -->
                     <Button x:Name="EditModeToggleButton" 
-                            Content="✏️ Режим редактирования" 
-                            Width="150" Height="28" Margin="0,0,0,0"
-                            Background="#FF9800" Foreground="White" BorderBrush="Transparent"
-                            Cursor="Hand" Visibility="Collapsed"
-                            Click="EnterEditMode_Click"
-                            ToolTip="Включить режим редактирования"/>
+                    Content="✏️ Режим редактирования" 
+                    Width="190" Height="28" Margin="0,0,10,0"
+                    Background="#FF9800" Foreground="White" BorderBrush="Transparent"
+                    Cursor="Hand" Visibility="Collapsed"
+                    Click="EnterEditMode_Click"
+                    ToolTip="Включить режим редактирования"/>
 
                     <!-- 5. Панель действий в режиме редактирования (заменяет кнопку выше) -->
                     <StackPanel x:Name="EditModeActions" Orientation="Horizontal" Visibility="Collapsed" Margin="0,0,0,0">
+                        <!-- 👇 ДОБАВЛЕНО: Click="SaveChanges_Click" -->
                         <Button Content="💾 Сохранить" Width="100" Height="28" Margin="0,0,5,0"
-                                Background="#4CAF50" Foreground="White" BorderBrush="Transparent" Cursor="Hand"/>
+            Background="#4CAF50" Foreground="White" BorderBrush="Transparent" Cursor="Hand"
+            Click="SaveChanges_Click"/>
+
                         <Button Content="❌ Выйти" Width="80" Height="28"
-                                Background="#F44336" Foreground="White" BorderBrush="Transparent" Cursor="Hand"
-                                Click="ExitEditMode_Click"/>
+            Background="#F44336" Foreground="White" BorderBrush="Transparent" Cursor="Hand"
+            Click="ExitEditMode_Click"/>
                     </StackPanel>
 
                 </StackPanel>

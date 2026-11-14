@@ -5,7 +5,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Media;
 using EWS_NSK_WPF.Helpers;
-using EWS_NSK_WPF.Models; // <--- НОВОЕ: для FireStation
+using EWS_NSK_WPF.Models; 
 using GMap.NET;
 using GMap.NET.MapProviders;
 using GMap.NET.WindowsPresentation;
@@ -14,6 +14,7 @@ using EWS_NSK_WPF.Services;
 
 namespace EWS_NSK_WPF
 {
+
     public partial class MapWindow : Window
     {
 
@@ -33,6 +34,19 @@ namespace EWS_NSK_WPF
 
         private WindowMode _requestedMode;
         private bool _isEditMode = false;
+
+        private bool _hasUnsavedChanges = false;
+        private List<Ewss> _modifiedHydrants = new List<Ewss>();
+        public bool HasUnsavedChanges
+        {
+            get => _hasUnsavedChanges;
+            set
+            {
+                _hasUnsavedChanges = value;
+                // Предупреждение видно ТОЛЬКО когда есть несохранённые изменения
+                UnsavedWarningBorder.Visibility = value ? Visibility.Visible : Visibility.Collapsed;
+            }
+        }
 
         // <--- НОВОЕ: Добавлен параметр userStation в конструктор
         public MapWindow(string userName, string position, string accessLevel, WindowMode requestedMode, int userRole = 0, FireStation userStation = null)
@@ -63,16 +77,15 @@ namespace EWS_NSK_WPF
 
             MainMap.Manager.Mode = AccessMode.ServerAndCache;
 
-            // <--- НОВОЕ: Если есть часть, центрируем карту на ней, иначе на общий центр
             if (_userStation != null)
             {
                 MainMap.Position = new PointLatLng(_userStation.CenterLat, _userStation.CenterLng);
-                UserInfoLabel.Text = $"Пользователь: {userName} ({position}) | 🚒 {_userStation.StationName}";
+                UserInfoLabel.Text = $"🚒 {_userStation.StationName}";   // убрали имя и должность
             }
             else
             {
                 MainMap.Position = new PointLatLng(55.0084, 82.9357);
-                UserInfoLabel.Text = $"Пользователь: {userName} ({position})";
+                UserInfoLabel.Text = "";   // пусто — имя не показываем
             }
 
             MainMap.MinZoom = 10;
@@ -85,12 +98,14 @@ namespace EWS_NSK_WPF
 
             // === 2. ЗАГРУЗКА ГИДРАНТОВ ===
             LoadHydrantsToMap();
+            // Подписка на закрытие окна карты
+            this.Closing += MapWindow_Closing;
 
             // 🎯 НОВОЕ: Обработка режима открытия окна
             _requestedMode = requestedMode;
             if (_requestedMode == WindowMode.Edit && currentUserRole >= 2)
             {
-                EnterEditMode();
+                EnterEditMode_Click(null, null);
             }
             else if (currentUserRole >= 2)
             {
@@ -121,27 +136,24 @@ namespace EWS_NSK_WPF
                 catch { }
             };
         }
-        // Метод для вызова из кода (без параметров)
-        private void EnterEditMode()
+        // Метод-обработчик для XAML (вызывается при нажатии кнопки "Режим редактирования")
+        private void EnterEditMode_Click(object sender, RoutedEventArgs e)
         {
             _isEditMode = true;
             EditModeToggleButton.Visibility = Visibility.Collapsed;
             EditModeActions.Visibility = Visibility.Visible;
-            UserInfoLabel.Text = $"Пользователь: ... | 🚒 {_userStation?.StationName} | ✏️ РЕЖИМ РЕДАКТИРОВАНИЯ";
+            EditModeIndicator.Visibility = Visibility.Visible;
+            // ⚠ НЕ трогаем UnsavedWarningBorder — оно появится только при реальном изменении
         }
 
-        // Метод-обработчик для XAML (с параметрами)
-        private void EnterEditMode_Click(object sender, RoutedEventArgs e)
-        {
-            EnterEditMode();
-        }
-
+        // Метод-обработчик для XAML (вызывается при нажатии кнопки "Выйти")
         private void ExitEditMode_Click(object sender, RoutedEventArgs e)
         {
             _isEditMode = false;
             EditModeToggleButton.Visibility = currentUserRole >= 2 ? Visibility.Visible : Visibility.Collapsed;
             EditModeActions.Visibility = Visibility.Collapsed;
-            UserInfoLabel.Text = $"Пользователь: ... | 🚒 {_userStation?.StationName} | ✅ Загружено: {_allHydrants.Count}";
+            EditModeIndicator.Visibility = Visibility.Collapsed;
+            // ⚠ Предупреждение НЕ скрываем — если есть несохранённые изменения, оно должно напоминать о себе
         }
 
         // Этот метод вызывается из HydrantDetailsViewModel при нажатии "Сохранить"
@@ -152,10 +164,18 @@ namespace EWS_NSK_WPF
             {
                 existing.EwsStatusCod = updatedHydrant.EwsStatusCod;
                 existing.StatusName = updatedHydrant.StatusName;
-                // Здесь можно добавить обновление других полей, если админ их менял
+            }
+
+            // Гидрант сохранён → убираем из списка изменённых
+            _modifiedHydrants.RemoveAll(h => h.MarkerId == updatedHydrant.MarkerId);
+
+            // Если больше ничего не изменено — гасим предупреждение
+            if (_modifiedHydrants.Count == 0)
+            {
+                HasUnsavedChanges = false;
             }
         }
-        
+
 
         private void LoadHydrantsToMap()
         {
@@ -321,6 +341,7 @@ namespace EWS_NSK_WPF
                     }
                     MainMap.Markers.Add(marker);
                 }
+
 
                 _allHydrants = hydrants;
                 UserInfoLabel.Text += $" | ✅ Загружено: {_allHydrants.Count}";
@@ -525,13 +546,17 @@ namespace EWS_NSK_WPF
                         if (foundHydrant != null) System.Diagnostics.Debug.WriteLine($"✅ Найдено по номеру! Гидрант №{foundHydrant.DisplayNumber}");
                     }
                 }
+
                 // === 3. РЕЗУЛЬТАТ ===
                 if (foundHydrant != null)
                 {
                     MainMap.Position = new PointLatLng(foundHydrant.LatitudeD, foundHydrant.LongitudeD);
                     MainMap.Zoom = 17;
 
-                    var detailsWindow = new HydrantDetailsWindow(foundHydrant, currentUserRole);
+                    
+                    var detailsWindow = new HydrantDetailsWindow(foundHydrant, currentUserRole, _isEditMode);
+
+
                     detailsWindow.Owner = this;
 
                     // 🎯 ПОДПИСКА НА МГНОВЕННУЮ ПЕРЕКРАСКУ (при поиске)
@@ -544,6 +569,7 @@ namespace EWS_NSK_WPF
                             {
                                 HydrantMarker.UpdateMarkerColors(marker, updatedHydrant);
                             }
+                            MarkHydrantModified(updatedHydrant);
                         };
                     }
 
@@ -556,7 +582,94 @@ namespace EWS_NSK_WPF
             }
             finally { _isSearching = false; }
         }
-
+        // Публичное свойство, чтобы HydrantMarker мог узнать текущий режим
+        public bool IsInEditMode => _isEditMode;
         private void ClearSearch_Click(object sender, RoutedEventArgs e) { SearchTextBox.Clear(); SearchTextBox.Focus(); }
+
+        private void MapWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            if (_hasUnsavedChanges)
+            {
+                var result = MessageBox.Show(
+                    "У вас есть несохраненные изменения!\n\nСохранить их перед закрытием?",
+                    "Несохраненные изменения",
+                    MessageBoxButton.YesNoCancel,
+                    MessageBoxImage.Warning);
+
+                if (result == MessageBoxResult.Yes)
+                {
+                    // TODO: Здесь будет вызов сохранения всех изменений в БД
+                    MessageBox.Show("Изменения сохранены!", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
+                    _hasUnsavedChanges = false;
+                }
+                else if (result == MessageBoxResult.Cancel)
+                {
+                    e.Cancel = true; // Отменяем закрытие
+                }
+                // Если No - закрываем без сохранения
+            }
+
+
+        }
+        // Помечает конкретный гидрант как изменённый + включает предупреждение
+        public void MarkHydrantModified(Ewss hydrant)
+        {
+            if (!_modifiedHydrants.Any(h => h.MarkerId == hydrant.MarkerId))
+            {
+                _modifiedHydrants.Add(hydrant);
+            }
+            HasUnsavedChanges = true;
+        }
+
+        // Старый метод оставляем как обёртку (на всякий случай)
+        public void MarkAsUnsavedChanges()
+        {
+            HasUnsavedChanges = true;
+        }
+        // ==========================================
+        // Сохранение изменений из режима редактирования
+        // ==========================================
+        private async void SaveChanges_Click(object sender, RoutedEventArgs e)
+        {
+            if (_modifiedHydrants.Count == 0)
+            {
+                MessageBox.Show("Нет несохранённых изменений.", "Информация",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            try
+            {
+                string dbPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources", "INPPV.db");
+                using var conn = new Microsoft.Data.Sqlite.SqliteConnection($"Data Source={dbPath}");
+                await conn.OpenAsync();
+
+                int savedCount = 0;
+                foreach (var h in _modifiedHydrants)
+                {
+                    var cmd = conn.CreateCommand();
+                    cmd.CommandText = "UPDATE tbl_EWS SET [Статус ИНППВ] = @s WHERE EWS_Map_ID = @id";
+                    cmd.Parameters.AddWithValue("@s", h.EwsStatusCod);
+                    cmd.Parameters.AddWithValue("@id", h.EwsMapId);
+                    await cmd.ExecuteNonQueryAsync();
+                    savedCount++;
+                }
+
+                // Очищаем список измененных и гасим предупреждение
+                _modifiedHydrants.Clear();
+                HasUnsavedChanges = false;
+
+                MessageBox.Show($"Успешно сохранено {savedCount} изменённый(ых) гидрант(а/ов)!",
+                    "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка сохранения: {ex.Message}", "Ошибка",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+
     }
+
 }
