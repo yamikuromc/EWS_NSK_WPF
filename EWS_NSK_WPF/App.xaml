@@ -19,6 +19,7 @@
         <!-- Конвертеры -->
         <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
         <converters:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibilityConverter"/>
+        <converters:StringToVisibilityConverter x:Key="StringToVisibilityConverter"/>
 
         <!-- Стиль TextBox только для чтения -->
         <Style x:Key="ReadOnlyTextBoxStyle" TargetType="TextBox">

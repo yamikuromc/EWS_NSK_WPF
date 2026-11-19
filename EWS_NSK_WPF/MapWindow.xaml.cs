@@ -1,16 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Windows;
-using System.Windows.Media;
-using EWS_NSK_WPF.Helpers;
+﻿using EWS_NSK_WPF.Helpers;
 using EWS_NSK_WPF.Models; 
+using EWS_NSK_WPF.Services;
+using EWS_NSK_WPF.ViewModels;
 using GMap.NET;
 using GMap.NET.MapProviders;
 using GMap.NET.WindowsPresentation;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
-using EWS_NSK_WPF.Services;
+using System.Windows;
+using System.Windows.Media;
+using System.Windows.Input;
 
 namespace EWS_NSK_WPF
 {
@@ -23,6 +25,7 @@ namespace EWS_NSK_WPF
         {
             MainMap.Position = new PointLatLng(lat, lng);
             MainMap.Zoom = zoom;
+
         }
         private EwsMapDataService? _ewsService;
         private int currentUserRole;
@@ -34,9 +37,12 @@ namespace EWS_NSK_WPF
 
         private WindowMode _requestedMode;
         private bool _isEditMode = false;
+        private bool _isAddingHydrant = false;
 
         private bool _hasUnsavedChanges = false;
         private List<Ewss> _modifiedHydrants = new List<Ewss>();
+        private List<Ewss> _newHydrants = new List<Ewss>();
+        private List<Ewss> _deletedHydrants = new List<Ewss>();
         public bool HasUnsavedChanges
         {
             get => _hasUnsavedChanges;
@@ -64,6 +70,7 @@ namespace EWS_NSK_WPF
                 {
                     MBTilesProvider.Instance.LoadMBTilesFile(mbTilesPath);
                     MainMap.MapProvider = MBTilesProvider.Instance;
+
                 }
                 catch
                 {
@@ -95,11 +102,21 @@ namespace EWS_NSK_WPF
             MainMap.LevelsKeepInMemory = 5;
 
             MainMap.OnMapZoomChanged += MainMap_OnMapZoomChanged;
+            MainMap.MouseLeftButtonUp += MainMap_MouseLeftButtonUp;
 
             // === 2. ЗАГРУЗКА ГИДРАНТОВ ===
             LoadHydrantsToMap();
             // Подписка на закрытие окна карты
             this.Closing += MapWindow_Closing;
+
+            this.PreviewKeyDown += (s, e) =>
+            {
+                if (e.Key == System.Windows.Input.Key.Escape && _isAddingHydrant)
+                {
+                    CancelAddMode();
+                    e.Handled = true;
+                }
+            };
 
             // 🎯 НОВОЕ: Обработка режима открытия окна
             _requestedMode = requestedMode;
@@ -114,6 +131,11 @@ namespace EWS_NSK_WPF
                 EditModeToggleButton.Visibility = Visibility.Visible;
             }
 
+            if (currentUserRole >= 2)
+            {
+                EditModeToggleButton.Visibility = Visibility.Visible;
+                AddHydrantButton.Visibility = Visibility.Visible; // <-- ДОБАВЛЕНО
+            }
 
             this.Loaded += (s, e) => ApplyTheme();
 
@@ -143,6 +165,7 @@ namespace EWS_NSK_WPF
             EditModeToggleButton.Visibility = Visibility.Collapsed;
             EditModeActions.Visibility = Visibility.Visible;
             EditModeIndicator.Visibility = Visibility.Visible;
+            AddHydrantPanel.Visibility = Visibility.Visible;
             // ⚠ НЕ трогаем UnsavedWarningBorder — оно появится только при реальном изменении
         }
 
@@ -153,6 +176,8 @@ namespace EWS_NSK_WPF
             EditModeToggleButton.Visibility = currentUserRole >= 2 ? Visibility.Visible : Visibility.Collapsed;
             EditModeActions.Visibility = Visibility.Collapsed;
             EditModeIndicator.Visibility = Visibility.Collapsed;
+            if (_isAddingHydrant) CancelAddMode();
+            AddHydrantPanel.Visibility = Visibility.Collapsed;
             // ⚠ Предупреждение НЕ скрываем — если есть несохранённые изменения, оно должно напоминать о себе
         }
 
@@ -309,7 +334,7 @@ namespace EWS_NSK_WPF
                 }
 
                 // <--- НОВОЕ: ФИЛЬТРАЦИЯ ПО РАДИУСУ ВЫЕЗДА ПСЧ
-                if (_userStation != null)
+                if (_userStation != null && currentUserRole < 3)
                 {
                     var filteredHydrants = hydrants.Where(h =>
                     {
@@ -513,7 +538,8 @@ namespace EWS_NSK_WPF
                             if (coords.HasValue)
                             {
                                 System.Diagnostics.Debug.WriteLine($"✅ Геокодинг успешен: {coords.Value.Lat}, {coords.Value.Lng}");
-                                foundHydrant = _allHydrants.OrderBy(h => {
+                                foundHydrant = _allHydrants.OrderBy(h =>
+                                {
                                     double dist = Math.Sqrt(Math.Pow(h.LatitudeD - coords.Value.Lat, 2) + Math.Pow(h.LongitudeD - coords.Value.Lng, 2));
                                     int statusPriority = (h.EwsStatusCod != 2) ? 0 : 1;
                                     return (statusPriority, dist);
@@ -553,7 +579,7 @@ namespace EWS_NSK_WPF
                     MainMap.Position = new PointLatLng(foundHydrant.LatitudeD, foundHydrant.LongitudeD);
                     MainMap.Zoom = 17;
 
-                    
+
                     var detailsWindow = new HydrantDetailsWindow(foundHydrant, currentUserRole, _isEditMode);
 
 
@@ -571,6 +597,9 @@ namespace EWS_NSK_WPF
                             }
                             MarkHydrantModified(updatedHydrant);
                         };
+                        detailsWindow.ViewModel.OnDeleteRequested = (h) => DeleteHydrant(h);
+                        detailsWindow.ViewModel.OnHydrantModified = (h) => MarkHydrantModified(h);
+
                     }
 
                     detailsWindow.ShowDialog();
@@ -631,7 +660,7 @@ namespace EWS_NSK_WPF
         // ==========================================
         private async void SaveChanges_Click(object sender, RoutedEventArgs e)
         {
-            if (_modifiedHydrants.Count == 0)
+            if (_newHydrants.Count == 0 && _modifiedHydrants.Count == 0 && _deletedHydrants.Count == 0)
             {
                 MessageBox.Show("Нет несохранённых изменений.", "Информация",
                     MessageBoxButton.OK, MessageBoxImage.Information);
@@ -644,32 +673,235 @@ namespace EWS_NSK_WPF
                 using var conn = new Microsoft.Data.Sqlite.SqliteConnection($"Data Source={dbPath}");
                 await conn.OpenAsync();
 
-                int savedCount = 0;
-                foreach (var h in _modifiedHydrants)
+                int inserted = 0, updated = 0, deleted = 0;
+
+                // 1. НОВЫЕ гидранты → INSERT (пропускаем уже вставленные при частичном сохранении)
+                foreach (var h in _newHydrants)
                 {
+                    if (h.EwsMapId != 0) continue; // уже в базе — не дублируем
+
                     var cmd = conn.CreateCommand();
-                    cmd.CommandText = "UPDATE tbl_EWS SET [Статус ИНППВ] = @s WHERE EWS_Map_ID = @id";
-                    cmd.Parameters.AddWithValue("@s", h.EwsStatusCod);
-                    cmd.Parameters.AddWithValue("@id", h.EwsMapId);
+                    cmd.CommandText = @"INSERT INTO tbl_EWS 
+                (EWS_GeoCoord_X, EWS_GeoCoord_Y, [Номер ПГ], [Статус ИНППВ], [Адресный объект - COD], 
+                 [Номер дома], [Диаметр сети], [Расположение указателя], [Ведомственная принадлежность],
+                 Record_Created, Record_User_COD, [Статус записи]) 
+                VALUES (@lat, @lng, @num, @status, @addr, @house, @diam, @priv, @owner, @date, @user, @recStatus)";
+                    cmd.Parameters.AddWithValue("@lat", h.LatitudeD.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                    cmd.Parameters.AddWithValue("@lng", h.LongitudeD.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                    cmd.Parameters.AddWithValue("@num", h.EwsNumber);
+                    cmd.Parameters.AddWithValue("@status", h.EwsStatusCod);
+                    cmd.Parameters.AddWithValue("@addr", h.EwsAddressObjectCod ?? "");
+                    cmd.Parameters.AddWithValue("@house", h.EwsHouseNumber ?? "");
+                    cmd.Parameters.AddWithValue("@diam", h.EwsDiameterWsCod);
+                    cmd.Parameters.AddWithValue("@priv", h.EwsPriviazka ?? "");
+                    cmd.Parameters.AddWithValue("@owner", h.EwsOwnerCod);
+                    cmd.Parameters.AddWithValue("@date", h.RecordCreated);
+                    cmd.Parameters.AddWithValue("@user", h.RecordUserCod);
+                    cmd.Parameters.AddWithValue("@recStatus", h.RecordStatus);
                     await cmd.ExecuteNonQueryAsync();
-                    savedCount++;
+
+                    // Сразу забираем новый ID — это защита от дублей при повторном сохранении
+                    var idCmd = conn.CreateCommand();
+                    idCmd.CommandText = "SELECT MAX(EWS_Map_ID) FROM tbl_EWS";
+                    var res = await idCmd.ExecuteScalarAsync();
+                    h.EwsMapId = res != DBNull.Value ? Convert.ToInt32(res) : 0;
+                    inserted++;
                 }
 
-                // Очищаем список измененных и гасим предупреждение
+                // 2. ИЗМЕНЁННЫЕ гидранты → UPDATE
+                foreach (var h in _modifiedHydrants)
+                {
+                    if (h.EwsMapId == 0) continue; // новый гидрант — его уже вставили выше
+
+                    var cmd = conn.CreateCommand();
+                    cmd.CommandText = "UPDATE tbl_EWS SET [Статус ИНППВ] = @s, [Ведомственная принадлежность] = @o WHERE EWS_Map_ID = @id";
+                    cmd.Parameters.AddWithValue("@s", h.EwsStatusCod);
+                    cmd.Parameters.AddWithValue("@o", h.EwsOwnerCod);
+                    cmd.Parameters.AddWithValue("@id", h.EwsMapId);   // ← ВОТ ЭТА СТРОКА И ПРОПАЛА!
+                    await cmd.ExecuteNonQueryAsync();
+                    updated++;
+                }
+
+                // 3. УДАЛЁННЫЕ гидранты → DELETE
+                foreach (var h in _deletedHydrants)
+                {
+                    if (h.EwsMapId == 0) continue; // не было в базе — просто убираем из памяти
+
+                    var cmd = conn.CreateCommand();
+                    cmd.CommandText = "DELETE FROM tbl_EWS WHERE EWS_Map_ID = @id";
+                    cmd.Parameters.AddWithValue("@id", h.EwsMapId);
+                    await cmd.ExecuteNonQueryAsync();
+                    deleted++;
+                }
+
+                // Всё прошло — очищаем списки и гасим предупреждение
+                _newHydrants.Clear();
                 _modifiedHydrants.Clear();
+                _deletedHydrants.Clear();
                 HasUnsavedChanges = false;
 
-                MessageBox.Show($"Успешно сохранено {savedCount} изменённый(ых) гидрант(а/ов)!",
+                MessageBox.Show($"Сохранено в базу: добавлено {inserted}, изменено {updated}, удалено {deleted}.",
                     "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Ошибка сохранения: {ex.Message}", "Ошибка",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Ошибка сохранения: {ex.Message}\n\n" +
+                    "Внимание: часть изменений могла быть записана в базу. " +
+                    "Нажми «Сохранить изменения» ещё раз — дубликаты не появятся.",
+                    "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
 
-    }
 
-}
+        // ==========================================
+        // ЛОГИКА ДОБАВЛЕНИЯ ГИДРАНТА
+        // ==========================================
+
+        private void AddHydrantButton_Click(object sender, RoutedEventArgs e)
+        {
+            // Явный выбор действия вместо «переключалки» — отмена гарантированно сбрасывает режим
+            if (_isAddingHydrant)
+                CancelAddMode();
+            else
+                StartAddMode();
+        }
+
+        private void StartAddMode()
+        {
+            _isAddingHydrant = true;
+            MainMap.Cursor = System.Windows.Input.Cursors.Cross;
+            AddHydrantButton.Content = "❌ Отмена добавления";
+        }
+
+        private void CancelAddMode()
+        {
+            _isAddingHydrant = false;
+            MainMap.Cursor = System.Windows.Input.Cursors.Arrow;
+            AddHydrantButton.Content = "➕ Добавить гидрант";
+        }
+        private void MainMap_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            if (!_isAddingHydrant) return;
+
+            // Если это был drag (перетаскивание карты), а не клик — игнорируем
+            if (MainMap.IsDragging) return;
+
+            // Переводим пиксели экрана в координаты карты
+            var p = e.GetPosition(MainMap);
+            var point = MainMap.FromLocalToLatLng((int)p.X, (int)p.Y);
+
+            // 🚨 ЖЕСТКАЯ ПРОВЕРКА РОЛЕЙ
+            if (currentUserRole < 2)
+            {
+                MessageBox.Show("Недостаточно прав для добавления гидранта.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            // 🚨 ПРОВЕРКА РАДИУСА ДЛЯ АДМИНА ПЧ (Роль = 2)
+            if (currentUserRole == 2 && _userStation != null)
+            {
+                double dist = Math.Sqrt(Math.Pow(point.Lat - _userStation.CenterLat, 2) + Math.Pow(point.Lng - _userStation.CenterLng, 2)) * 111000;
+                if (dist > _userStation.RadiusMeters)
+                {
+                    MessageBox.Show($"Вы можете добавлять гидранты только в районе выезда вашей ПСЧ (радиус {_userStation.RadiusMeters} м).",
+                        "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+            }
+
+            // Открываем окно создания
+            var addWindow = new AddHydrantWindow(point.Lat, point.Lng, currentUserRole);
+            addWindow.Owner = this;
+
+            if (addWindow.ShowDialog() == true)
+            {
+                var vm = addWindow.DataContext as AddHydrantViewModel;
+                if (vm != null)
+                {
+                    // Не пишем в БД! Добавляем в память и помечаем как несохранённый
+                    vm.NewHydrant.MarkerId = _allHydrants.Count > 0 ? _allHydrants.Max(h => h.MarkerId) + 1 : 1;
+                    vm.NewHydrant.EwsMapId = 0; // 0 = ещё нет в базе
+                    _newHydrants.Add(vm.NewHydrant);
+                    AddNewHydrantToMap(vm.NewHydrant);
+                    HasUnsavedChanges = true; // 🔥 теперь предупреждение загорится
+                    MessageBox.Show("Гидрант добавлен на карту.\nНе забудьте нажать «💾 Сохранить изменения», чтобы записать его в базу.",
+                        "Добавлено", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+            }
+
+            // Сбрасываем режим добавления
+            CancelAddMode();
+        }
+
+        private void SaveNewHydrantToDb(Ewss hydrant)
+        {
+            string dbPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources", "INPPV.db");
+            using var conn = new Microsoft.Data.Sqlite.SqliteConnection($"Data Source={dbPath}");
+            conn.Open();
+
+            var cmd = conn.CreateCommand();
+            cmd.CommandText = @"INSERT INTO tbl_EWS 
+                (EWS_GeoCoord_X, EWS_GeoCoord_Y, [Номер ПГ], [Статус ИНППВ], [Адресный объект - COD], 
+                 [Номер дома], [Диаметр сети], [Расположение указателя], Record_Created, Record_User_COD, [Статус записи]) 
+                VALUES (@lat, @lng, @num, @status, @addr, @house, @diam, @priv, @date, @user, @recStatus)";
+
+            cmd.Parameters.AddWithValue("@lat", hydrant.LatitudeD.ToString(System.Globalization.CultureInfo.InvariantCulture));
+            cmd.Parameters.AddWithValue("@lng", hydrant.LongitudeD.ToString(System.Globalization.CultureInfo.InvariantCulture));
+            cmd.Parameters.AddWithValue("@num", hydrant.EwsNumber);
+            cmd.Parameters.AddWithValue("@status", hydrant.EwsStatusCod);
+            cmd.Parameters.AddWithValue("@addr", hydrant.EwsAddressObjectCod);
+            cmd.Parameters.AddWithValue("@house", hydrant.EwsHouseNumber);
+            cmd.Parameters.AddWithValue("@diam", hydrant.EwsDiameterWsCod);
+            cmd.Parameters.AddWithValue("@priv", hydrant.EwsPriviazka);
+            cmd.Parameters.AddWithValue("@date", hydrant.RecordCreated);
+            cmd.Parameters.AddWithValue("@user", hydrant.RecordUserCod);
+            cmd.Parameters.AddWithValue("@recStatus", hydrant.RecordStatus);
+            cmd.ExecuteNonQuery();
+
+            // Получаем новый ID
+            var idCmd = conn.CreateCommand();
+            idCmd.CommandText = "SELECT MAX(EWS_Map_ID) FROM tbl_EWS";
+            var res = idCmd.ExecuteScalar();
+            hydrant.EwsMapId = res != DBNull.Value ? Convert.ToInt32(res) : 1;
+            hydrant.MarkerId = _allHydrants.Count > 0 ? _allHydrants.Max(h => h.MarkerId) + 1 : 1;
+        }
+
+        private void AddNewHydrantToMap(Ewss hydrant)
+        {
+            int currentZoom = (int)MainMap.Zoom;
+            var marker = HydrantMarker.CreateMarker(hydrant, currentZoom, currentUserRole);
+            if (marker.Shape is FrameworkElement element)
+            {
+                element.ToolTip = $"🚒 Новый гидрант №{hydrant.EwsNumber}\n📊 Статус: {hydrant.StatusName}";
+            }
+            MainMap.Markers.Add(marker);
+            _allHydrants.Add(hydrant);
+        }
+    
+
+    // Вызывается из окна свойств через колбэк OnDeleteRequested
+public void DeleteHydrant(Ewss hydrant)
+        {
+            // Убираем маркер с карты
+            var marker = MainMap.Markers.FirstOrDefault(m => m.Tag as int? == hydrant.MarkerId);
+            if (marker != null) MainMap.Markers.Remove(marker);
+
+            // Убираем из памяти
+            _allHydrants.Remove(hydrant);
+
+            // Если это новый гидрант (не в базе) — просто выкидываем из _newHydrants
+            if (_newHydrants.Contains(hydrant))
+            {
+                _newHydrants.Remove(hydrant);
+            }
+            else
+            {
+                // Существующий — помечаем на удаление из базы
+                _deletedHydrants.Add(hydrant);
+            }
+
+            HasUnsavedChanges = true;
+        }
+}   }   
+        

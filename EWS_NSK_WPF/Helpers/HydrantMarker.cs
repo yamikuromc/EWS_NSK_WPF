@@ -189,6 +189,8 @@ namespace EWS_NSK_WPF.Helpers
                             HydrantMarker.UpdateMarkerColors(marker, updatedHydrant);
                             mapWin?.MarkHydrantModified(updatedHydrant);   // ← помечаем изменения
                         };
+                        detailsWindow.ViewModel.OnDeleteRequested = (h) => mapWin?.DeleteHydrant(h);
+                        detailsWindow.ViewModel.OnHydrantModified = (h) => mapWin?.MarkHydrantModified(h);
                     }
 
                     detailsWindow.ShowDialog();

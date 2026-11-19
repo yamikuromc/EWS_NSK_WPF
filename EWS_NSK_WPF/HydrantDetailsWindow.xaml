@@ -27,35 +27,52 @@
 
                             <!-- ComboBox только для редактирования -->
                             <ComboBox ItemsSource="{Binding AvailableStatuses}" 
-          DisplayMemberPath="Name" 
-          SelectedValuePath="Code"
-          SelectedValue="{Binding SelectedStatusCode, Mode=TwoWay}"
-          Background="White" 
-          Foreground="Black"
-          BorderBrush="{DynamicResource InputBorderBrush}" 
-          Padding="5,3" Height="28"
-          Visibility="{Binding CanEdit, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                                      DisplayMemberPath="Name" 
+                                      SelectedValuePath="Code"
+                                      SelectedValue="{Binding SelectedStatusCode, Mode=TwoWay}"
+                                      Background="White" Foreground="Black"
+                                      BorderBrush="{DynamicResource InputBorderBrush}" 
+                                      Padding="5,3" Height="28"
+                                      Visibility="{Binding CanEdit, Converter={StaticResource BoolToVisibilityConverter}}"/>
+
                             <!-- TextBox только для просмотра -->
                             <TextBox Text="{Binding Hydrant.StatusName, Mode=OneWay}" IsReadOnly="True" 
-             Style="{StaticResource ReadOnlyTextBoxStyle}"
-             Visibility="{Binding CanEdit, Converter={StaticResource InverseBoolToVisibilityConverter}}"/>
+                                     Style="{StaticResource ReadOnlyTextBoxStyle}"
+                                     Visibility="{Binding CanEdit, Converter={StaticResource InverseBoolToVisibilityConverter}}"/>
                         </StackPanel>
-                        
+
                         <StackPanel Margin="0,0,10,10">
                             <TextBlock Text="Адрес (объект)" FontSize="11" Foreground="{DynamicResource LabelForeground}"/>
                             <TextBox Text="{Binding Hydrant.EwsAddressObjectCod}" IsReadOnly="{Binding IsReadOnly}"
                                      Background="{DynamicResource InputBackground}" Foreground="{DynamicResource InputForeground}"
                                      BorderBrush="{DynamicResource InputBorderBrush}" Padding="5,3"/>
                         </StackPanel>
+
                         <StackPanel Margin="10,0,0,10">
                             <TextBlock Text="Номер дома" FontSize="11" Foreground="{DynamicResource LabelForeground}"/>
                             <TextBox Text="{Binding Hydrant.EwsHouseNumber}" IsReadOnly="{Binding IsReadOnly}"
                                      Background="{DynamicResource InputBackground}" Foreground="{DynamicResource InputForeground}"
                                      BorderBrush="{DynamicResource InputBorderBrush}" Padding="5,3"/>
                         </StackPanel>
+
+                        <!-- 🚨 ОБНОВЛЕНО: Владелец / Балансодержатель с поддержкой редактирования -->
                         <StackPanel Margin="0,0,10,10" Grid.ColumnSpan="2">
                             <TextBlock Text="Владелец / Балансодержатель" FontSize="11" Foreground="{DynamicResource LabelForeground}"/>
-                            <TextBox Text="{Binding Hydrant.OwnerName, Mode=OneWay}" IsReadOnly="True" Style="{StaticResource ReadOnlyTextBoxStyle}"/>
+
+                            <!-- ComboBox только для редактирования -->
+                            <ComboBox ItemsSource="{Binding AvailableOwners}"
+                                      DisplayMemberPath="Name"
+                                      SelectedValuePath="Code"
+                                      SelectedValue="{Binding SelectedOwnerCode, Mode=TwoWay}"
+                                      Background="White" Foreground="Black"
+                                      BorderBrush="{DynamicResource InputBorderBrush}"
+                                      Padding="5,3" Height="28"
+                                      Visibility="{Binding CanEdit, Converter={StaticResource BoolToVisibilityConverter}}"/>
+
+                            <!-- TextBox только для просмотра -->
+                            <TextBox Text="{Binding Hydrant.OwnerName, Mode=OneWay}" IsReadOnly="True"
+                                     Style="{StaticResource ReadOnlyTextBoxStyle}"
+                                     Visibility="{Binding CanEdit, Converter={StaticResource InverseBoolToVisibilityConverter}}"/>
                         </StackPanel>
                     </UniformGrid>
                 </ScrollViewer>
@@ -109,13 +126,10 @@
         </TabControl>
 
         <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,15,0,0">
-            <Button Content="💾 Сохранить" Width="100" Height="28" Margin="0,0,10,0"
-                    Background="{DynamicResource ButtonSaveBackground}" Foreground="White" BorderBrush="Transparent"
-                    Command="{Binding SaveCommand}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}"
-                    Visibility="{Binding CanSave, Converter={StaticResource BoolToVisibilityConverter}}"/>
-
             <Button Content="🗑️ Удалить" Width="100" Height="28" Margin="0,0,10,0"
                     Background="#F44336" Foreground="White" BorderBrush="Transparent"
+                    Command="{Binding DeleteCommand}"
+                    CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}"
                     Visibility="{Binding CanDelete, Converter={StaticResource BoolToVisibilityConverter}}"/>
 
             <Button Content="Закрыть" Width="100" Height="28"

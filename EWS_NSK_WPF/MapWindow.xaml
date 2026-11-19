@@ -84,13 +84,11 @@
                     Click="EnterEditMode_Click"
                     ToolTip="Включить режим редактирования"/>
 
-                    <!-- 5. Панель действий в режиме редактирования (заменяет кнопку выше) -->
+                    <!-- Панель действий в режиме редактирования -->
                     <StackPanel x:Name="EditModeActions" Orientation="Horizontal" Visibility="Collapsed" Margin="0,0,0,0">
-                        <!-- 👇 ДОБАВЛЕНО: Click="SaveChanges_Click" -->
                         <Button Content="💾 Сохранить" Width="100" Height="28" Margin="0,0,5,0"
             Background="#4CAF50" Foreground="White" BorderBrush="Transparent" Cursor="Hand"
             Click="SaveChanges_Click"/>
-
                         <Button Content="❌ Выйти" Width="80" Height="28"
             Background="#F44336" Foreground="White" BorderBrush="Transparent" Cursor="Hand"
             Click="ExitEditMode_Click"/>
@@ -107,6 +105,22 @@
                          BorderBrush="Orange" 
                          BorderThickness="2"/>
 
+        <!-- Плавающая кнопка добавления (видна только в режиме редактирования) -->
+        <Border x:Name="AddHydrantPanel" 
+        Grid.Row="1"
+        HorizontalAlignment="Right" VerticalAlignment="Top" 
+        Margin="0,10,10,0"
+        Background="#CC1E1E1E" CornerRadius="8" Padding="8"
+        Panel.ZIndex="100"
+        Visibility="Collapsed">
+            <Button x:Name="AddHydrantButton" 
+            Content="➕ Добавить гидрант" 
+            Width="170" Height="30"
+            Background="#2196F3" Foreground="White" BorderBrush="Transparent"
+            FontWeight="Bold" Cursor="Hand"
+            Click="AddHydrantButton_Click"/>
+        </Border>
+        
         <!-- Панель управления (Зум и Домой) -->
         <StackPanel Grid.Row="1" 
                     HorizontalAlignment="Right" 

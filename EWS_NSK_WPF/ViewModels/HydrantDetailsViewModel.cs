@@ -13,12 +13,19 @@ namespace EWS_NSK_WPF.ViewModels
         public string Name { get; set; }
     }
 
+    public class OwnerItem
+    {
+        public int Code { get; set; }
+        public string Name { get; set; }
+    }
+
     public class HydrantDetailsViewModel : ViewModelBase
     {
         private Ewss _hydrant;
         private bool _isReadOnly;
         private int _selectedStatusCode;
-        private bool _isMapEditMode; // <-- НОВОЕ: запоминаем режим карты
+        private int _selectedOwnerCode;
+        private List<OwnerItem> _availableOwners = new List<OwnerItem>();
 
         public Ewss Hydrant
         {
@@ -44,6 +51,12 @@ namespace EWS_NSK_WPF.ViewModels
             new StatusItem { Code = 4, Name = "Отсутствует / Демонтирован" }
         };
 
+        public List<OwnerItem> AvailableOwners
+        {
+            get => _availableOwners;
+            set => SetField(ref _availableOwners, value);
+        }
+
         public int SelectedStatusCode
         {
             get => _selectedStatusCode;
@@ -51,61 +64,108 @@ namespace EWS_NSK_WPF.ViewModels
             {
                 if (SetField(ref _selectedStatusCode, value))
                 {
-                    // Обновляем данные в памяти (для мгновенной перекраски на карте)
                     Hydrant.EwsStatusCod = value;
                     var status = AvailableStatuses.FirstOrDefault(s => s.Code == value);
                     Hydrant.StatusName = status?.Name ?? "Неизвестно";
+                    OnHydrantModified?.Invoke(Hydrant);
+                }
+            }
+        }
 
-                    // Уведомляем карту, чтобы она перекрасила маркер
-                    OnStatusChanged?.Invoke(Hydrant);
-
-                  
+        public int SelectedOwnerCode
+        {
+            get => _selectedOwnerCode;
+            set
+            {
+                if (SetField(ref _selectedOwnerCode, value))
+                {
+                    Hydrant.EwsOwnerCod = value;
+                    var owner = AvailableOwners.FirstOrDefault(o => o.Code == value);
+                    Hydrant.OwnerName = owner?.Name ?? "";
+                    OnHydrantModified?.Invoke(Hydrant);
                 }
             }
         }
 
         public Action<Ewss> OnStatusChanged { get; set; }
+        public Action<Ewss> OnHydrantModified { get; set; }
+        public Action<Ewss> OnDeleteRequested { get; set; }
+
         public RelayCommand SaveCommand { get; }
         public RelayCommand CloseCommand { get; }
+        public RelayCommand DeleteCommand { get; }
 
-        // <-- ИЗМЕНЕНО: добавлен параметр isMapEditMode
         public HydrantDetailsViewModel(Ewss hydrant, int userRole, bool isMapEditMode)
         {
             Hydrant = hydrant;
-            _isMapEditMode = isMapEditMode;
-
-            // 🚨 Блокируем редактирование, если пользователь не админ ИЛИ карта не в режиме редактирования
-            IsReadOnly = userRole < 2 || !isMapEditMode;
+            _isReadOnly = userRole < 2 || !isMapEditMode;
 
             _selectedStatusCode = hydrant.EwsStatusCod > 0 ? hydrant.EwsStatusCod : 1;
 
+            LoadOwners();
+            _selectedOwnerCode = hydrant.EwsOwnerCod;
+
             SaveCommand = new RelayCommand(SaveHydrant);
             CloseCommand = new RelayCommand(CloseWindow);
+            DeleteCommand = new RelayCommand(DeleteHydrant);
+        }
+
+        private void LoadOwners()
+        {
+            try
+            {
+                string dbPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources", "INPPV.db");
+                var owners = new List<OwnerItem>();
+
+                using (var conn = new Microsoft.Data.Sqlite.SqliteConnection($"Data Source={dbPath}"))
+                {
+                    conn.Open();
+                    var cmd = conn.CreateCommand();
+                    cmd.CommandText = "SELECT * FROM tbl_EWS_Owner";
+                    using var r = cmd.ExecuteReader();
+                    while (r.Read())
+                    {
+                        int id = 0;
+                        int.TryParse(r[0]?.ToString(), out id);
+                        string name = r[1]?.ToString() ?? "";
+                        if (id > 0 && !string.IsNullOrEmpty(name))
+                            owners.Add(new OwnerItem { Code = id, Name = name });
+                    }
+                }
+
+                owners.Insert(0, new OwnerItem { Code = 0, Name = "— не указан —" });
+                AvailableOwners = owners;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"⚠ Ошибка загрузки справочника владельцев: {ex.Message}");
+                AvailableOwners = new List<OwnerItem> { new OwnerItem { Code = 0, Name = "— не указан —" } };
+            }
         }
 
         private void SaveHydrant(object parameter)
         {
-            MessageBox.Show($"Данные гидранта ПГ-{Hydrant.DisplayNumber} сохранены в базу!", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show($"Данные гидранта ПГ-{Hydrant.DisplayNumber} подготовлены к сохранению.\nНажмите «💾 Сохранить изменения» на карте.",
+                "Информация", MessageBoxButton.OK, MessageBoxImage.Information);
+            CloseWindow(parameter);
+        }
 
-            if (parameter is Window window && window.Owner is MapWindow mapWindow)
+        private void DeleteHydrant(object parameter)
+        {
+            var result = MessageBox.Show(
+                $"Удалить гидрант ПГ-{Hydrant.DisplayNumber}?\n\nИзменение будет записано в базу после нажатия «💾 Сохранить изменения» на карте.",
+                "Подтверждение удаления", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+
+            if (result == MessageBoxResult.Yes)
             {
-                mapWindow.RefreshHydrantInList(Hydrant);
-                // Здесь можно было бы сбросить флаг несохраненных изменений, 
-                // но для простоты оставим его до закрытия карты, чтобы пользователь точно увидел предупреждение.
+                OnDeleteRequested?.Invoke(Hydrant);
+                if (parameter is Window window) window.Close();
             }
-
-            CloseWindow(parameter);   // ← было null, окно не закрывалось после сохранения
         }
 
         private void CloseWindow(object parameter)
         {
-            // 🚨 УБРАНО: окно предупреждения отсюда. 
-            // Теперь предупреждение будет выскакивать только при попытке закрыть САМУ КАРТУ (MapWindow),
-            // как ты и просила.
-            if (parameter is Window window)
-            {
-                window.Close();
-            }
+            if (parameter is Window window) window.Close();
         }
     }
 }
