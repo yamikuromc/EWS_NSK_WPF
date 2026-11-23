@@ -269,7 +269,7 @@ namespace EWS_NSK_WPF
 
             FindAndSetColor(window.Content as DependencyObject);
         }
-        
+
         // Вспомогательный метод: меняет цвета текста в MapWindow
         private static void SetTextColorsInMapWindow(MapWindow window, Color textColor, Color headerColor)
         {
@@ -297,6 +297,54 @@ namespace EWS_NSK_WPF
             }
 
             FindAndSetColor(window.Content as DependencyObject);
+        }
+
+        // Применение темы специально для окна Отчетов (по аналогии со Справочниками)
+        public static void ApplyThemeToReportsWindow(Window window)
+        {
+            if (window is ReportsWindow repWindow)
+            {
+                if (_isDarkTheme)
+                {
+                    repWindow.Background = new SolidColorBrush(Color.FromRgb(10, 10, 30));
+                    // Перекрашиваем элементы отчета
+                    SetControlTheme(repWindow, isDark: true);
+                }
+                else
+                {
+                    repWindow.Background = new SolidColorBrush(Color.FromRgb(0, 40, 100)); // Как в ReferencesWindow
+                    SetControlTheme(repWindow, isDark: false);
+                }
+            }
+        }
+
+        private static void SetControlTheme(ReportsWindow window, bool isDark)
+        {
+            // Находим элементы по имени и красим их, как в ReferencesWindow
+            if (window.FindName("LeftPanelBorder") is Border leftPanel)
+            {
+                leftPanel.Background = isDark ? new SolidColorBrush(Color.FromRgb(20, 20, 50)) : new SolidColorBrush(Color.FromRgb(0, 60, 120));
+                leftPanel.BorderBrush = new SolidColorBrush(Colors.Orange);
+            }
+
+            if (window.FindName("PreviewDataGrid") is DataGrid grid)
+            {
+                grid.Background = isDark ? new SolidColorBrush(Color.FromRgb(20, 20, 50)) : new SolidColorBrush(Colors.White);
+                grid.Foreground = isDark ? new SolidColorBrush(Colors.White) : new SolidColorBrush(Colors.Black);
+                grid.RowBackground = isDark ? new SolidColorBrush(Color.FromRgb(25, 25, 55)) : new SolidColorBrush(Colors.White);
+                grid.AlternatingRowBackground = isDark ? new SolidColorBrush(Color.FromRgb(35, 35, 70)) : new SolidColorBrush(Color.FromRgb(240, 248, 255));
+                grid.BorderBrush = isDark ? new SolidColorBrush(Color.FromRgb(60, 60, 100)) : new SolidColorBrush(Colors.Transparent);
+
+                var headerStyle = new Style(typeof(DataGridColumnHeader));
+                headerStyle.Setters.Add(new Setter(DataGridColumnHeader.BackgroundProperty, new SolidColorBrush(Color.FromRgb(0, 60, 120))));
+                headerStyle.Setters.Add(new Setter(DataGridColumnHeader.ForegroundProperty, new SolidColorBrush(Colors.Orange)));
+                headerStyle.Setters.Add(new Setter(DataGridColumnHeader.FontWeightProperty, FontWeights.Bold));
+                grid.ColumnHeaderStyle = headerStyle;
+
+                var rowStyle = new Style(typeof(DataGridRow));
+                rowStyle.Setters.Add(new Setter(DataGridRow.ForegroundProperty, isDark ? new SolidColorBrush(Colors.White) : new SolidColorBrush(Colors.Black)));
+                grid.RowStyle = rowStyle;
+            }
         }
     }
 }
