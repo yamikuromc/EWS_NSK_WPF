@@ -98,10 +98,7 @@ namespace EWS_NSK_WPF
             dataGrid.Background = new SolidColorBrush(Color.FromRgb(20, 20, 50));
             dataGrid.Foreground = new SolidColorBrush(Colors.White);
             dataGrid.BorderBrush = new SolidColorBrush(Color.FromRgb(60, 60, 100));
-            dataGrid.GridLinesVisibility = DataGridGridLinesVisibility.Horizontal;
-            dataGrid.RowBackground = new SolidColorBrush(Color.FromRgb(25, 25, 55));
-            dataGrid.AlternatingRowBackground = new SolidColorBrush(Color.FromRgb(35, 35, 70));
-
+            
             var headerStyle = new Style(typeof(DataGridColumnHeader));
             headerStyle.Setters.Add(new Setter(DataGridColumnHeader.BackgroundProperty, new SolidColorBrush(Color.FromRgb(0, 60, 120))));
             headerStyle.Setters.Add(new Setter(DataGridColumnHeader.ForegroundProperty, new SolidColorBrush(Colors.Orange)));
@@ -335,14 +332,22 @@ namespace EWS_NSK_WPF
                 grid.AlternatingRowBackground = isDark ? new SolidColorBrush(Color.FromRgb(35, 35, 70)) : new SolidColorBrush(Color.FromRgb(240, 248, 255));
                 grid.BorderBrush = isDark ? new SolidColorBrush(Color.FromRgb(60, 60, 100)) : new SolidColorBrush(Colors.Transparent);
 
+                var lineBrush = isDark
+                    ? new SolidColorBrush(Color.FromRgb(90, 90, 122))    // #5A5A7A
+                    : new SolidColorBrush(Color.FromRgb(208, 208, 208)); // #D0D0D0
+
                 var headerStyle = new Style(typeof(DataGridColumnHeader));
                 headerStyle.Setters.Add(new Setter(DataGridColumnHeader.BackgroundProperty, new SolidColorBrush(Color.FromRgb(0, 60, 120))));
                 headerStyle.Setters.Add(new Setter(DataGridColumnHeader.ForegroundProperty, new SolidColorBrush(Colors.Orange)));
                 headerStyle.Setters.Add(new Setter(DataGridColumnHeader.FontWeightProperty, FontWeights.Bold));
+                headerStyle.Setters.Add(new Setter(DataGridColumnHeader.BorderBrushProperty, lineBrush));
+                headerStyle.Setters.Add(new Setter(DataGridColumnHeader.BorderThicknessProperty, new Thickness(0, 0, 1, 1)));
                 grid.ColumnHeaderStyle = headerStyle;
 
                 var rowStyle = new Style(typeof(DataGridRow));
                 rowStyle.Setters.Add(new Setter(DataGridRow.ForegroundProperty, isDark ? new SolidColorBrush(Colors.White) : new SolidColorBrush(Colors.Black)));
+                rowStyle.Setters.Add(new Setter(DataGridRow.BorderBrushProperty, lineBrush));
+                rowStyle.Setters.Add(new Setter(DataGridRow.BorderThicknessProperty, new Thickness(0, 0, 0, 1)));
                 grid.RowStyle = rowStyle;
             }
         }

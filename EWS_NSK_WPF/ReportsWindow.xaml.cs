@@ -1,8 +1,11 @@
-﻿using System;
+﻿using EWS_NSK_WPF.Models;
+using EWS_NSK_WPF.Services;
+using EWS_NSK_WPF.Services.ReportTemplates;
+using System;
 using System.Collections.Generic;
 using System.Windows;
-using EWS_NSK_WPF.Models;
-using EWS_NSK_WPF.Services;
+using System.Windows.Controls;
+using System.Windows.Input;
 
 namespace EWS_NSK_WPF
 {
@@ -17,6 +20,7 @@ namespace EWS_NSK_WPF
         public ReportsWindow(string userName, string position, string accessLevel, WindowMode requestedMode)
         {
             InitializeComponent();
+            PreviewDataGrid.PreviewMouseWheel += DataGrid_PreviewMouseWheel;
 
             _currentUserName = userName;
             _canEdit = (requestedMode == WindowMode.Edit && accessLevel != "Operator");
@@ -64,6 +68,7 @@ namespace EWS_NSK_WPF
             };
 
             PreviewCountLabel.Text = $"Всего записей для отчета: {_filteredHydrants.Count}";
+            PreviewDataGrid.AutoGeneratingColumn += PreviewDataGrid_AutoGeneratingColumn;
             PreviewDataGrid.ItemsSource = _filteredHydrants;
         }
 
@@ -79,15 +84,25 @@ namespace EWS_NSK_WPF
             var dialog = new Microsoft.Win32.SaveFileDialog
             {
                 Filter = "Документ Word|*.docx",
-                FileName = $"Отчет_ИНППВ_{_currentReportType}_{DateTime.Now:yyyyMMdd}.docx"
+                FileName = $"Список_неисправных_ПГ_{DateTime.Now:yyyyMMdd}.docx"
             };
 
             if (dialog.ShowDialog() == true)
             {
                 try
                 {
-                    var service = new WordReportService();
-                    service.GenerateFormalReport(_filteredHydrants, dialog.FileName, _currentReportType, _currentUserName);
+                    // Параметры для шаблона
+                    var parameters = new Dictionary<string, object>
+                    {
+                        ["territory"] = "р.п. Краснообск и п. Элитный",
+                        ["season"] = "осенней",
+                        ["year"] = DateTime.Now.Year,
+                        ["authorPosition"] = "Начальник караула смены №2 37 ПСЧ 5 ПСО ФПС ГПС ГУ по Новосибирской области",
+                        ["authorName"] = _currentUserName
+                    };
+
+                    // Генерируем через новую систему
+                    ReportGenerator.GenerateReport(_currentReportType, _filteredHydrants, dialog.FileName, parameters);
 
                     MessageBox.Show($"Отчет успешно сформирован:\n{dialog.FileName}",
                         "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -104,6 +119,51 @@ namespace EWS_NSK_WPF
         {
             MessageBox.Show("Функция экспорта в Excel находится в разработке.",
                 "Информация", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        private void PreviewDataGrid_AutoGeneratingColumn(object sender, DataGridAutoGeneratingColumnEventArgs e)
+        {
+            // Словарь переименований (как в справочниках)
+            var columnNames = new Dictionary<string, string>
+            {
+                ["EwsNumber"] = "№ ПГ",
+                ["AddressObjectName"] = "Населенный пункт",
+                ["EwsHouseNumber"] = "Адрес",
+                ["OwnerName"] = "Балансодержатель",
+                ["StatusName"] = "Статус",
+                ["PipeInfo"] = "Диаметр",
+                ["EwsStateNote"] = "Примечание"
+            };
+
+            if (columnNames.ContainsKey(e.PropertyName))
+            {
+                e.Column.Header = columnNames[e.PropertyName];
+            }
+            else
+            {
+                // Скрываем все остальные колонки (технические поля)
+                e.Cancel = true;
+            }
+        }
+
+        private void FontSizeSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            if (PreviewDataGrid != null)
+            {
+                PreviewDataGrid.FontSize = e.NewValue;
+            }
+        }
+
+        private void DataGrid_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
+        {
+            if (Keyboard.Modifiers == ModifierKeys.Control)
+            {
+                double delta = e.Delta > 0 ? 1 : -1;
+                double newSize = Math.Max(9, Math.Min(16, PreviewDataGrid.FontSize + delta));
+                PreviewDataGrid.FontSize = newSize;
+                if (FontSizeSlider != null) FontSizeSlider.Value = newSize;
+                e.Handled = true;
+            }
         }
     }
 }

@@ -106,6 +106,7 @@ namespace EWS_NSK_WPF
         public ReferencesWindow()
         {
             InitializeComponent();
+            ReferenceDataGrid.PreviewMouseWheel += DataGrid_PreviewMouseWheel;
             UserInfoLabel.Text = "Режим: Просмотр справочных данных";
 
             this.Loaded += (s, e) =>
@@ -120,7 +121,12 @@ namespace EWS_NSK_WPF
 
         private void ApplyCurrentTheme()
         {
-            if (ThemeManager.IsDarkTheme)
+            bool isDark = ThemeManager.IsDarkTheme;
+            var lineBrush = isDark
+                ? new SolidColorBrush(Color.FromRgb(90, 90, 122))    // #5A5A7A
+                : new SolidColorBrush(Color.FromRgb(208, 208, 208)); // #D0D0D0
+
+            if (isDark)
             {
                 this.Background = new SolidColorBrush(Color.FromRgb(10, 10, 30));
                 ReferenceDataGrid.Background = new SolidColorBrush(Color.FromRgb(20, 20, 50));
@@ -133,11 +139,14 @@ namespace EWS_NSK_WPF
                 headerStyle.Setters.Add(new Setter(DataGridColumnHeader.BackgroundProperty, new SolidColorBrush(Color.FromRgb(0, 60, 120))));
                 headerStyle.Setters.Add(new Setter(DataGridColumnHeader.ForegroundProperty, new SolidColorBrush(Colors.Orange)));
                 headerStyle.Setters.Add(new Setter(DataGridColumnHeader.FontWeightProperty, FontWeights.Bold));
-                headerStyle.Setters.Add(new Setter(DataGridColumnHeader.BorderBrushProperty, new SolidColorBrush(Color.FromRgb(60, 60, 100))));
+                headerStyle.Setters.Add(new Setter(DataGridColumnHeader.BorderBrushProperty, lineBrush));
+                headerStyle.Setters.Add(new Setter(DataGridColumnHeader.BorderThicknessProperty, new Thickness(0, 0, 1, 1)));
                 ReferenceDataGrid.ColumnHeaderStyle = headerStyle;
 
                 var rowStyle = new Style(typeof(DataGridRow));
                 rowStyle.Setters.Add(new Setter(DataGridRow.ForegroundProperty, new SolidColorBrush(Colors.White)));
+                rowStyle.Setters.Add(new Setter(DataGridRow.BorderBrushProperty, lineBrush));
+                rowStyle.Setters.Add(new Setter(DataGridRow.BorderThicknessProperty, new Thickness(0, 0, 0, 1)));
                 ReferenceDataGrid.RowStyle = rowStyle;
             }
             else
@@ -153,10 +162,14 @@ namespace EWS_NSK_WPF
                 headerStyle.Setters.Add(new Setter(DataGridColumnHeader.BackgroundProperty, new SolidColorBrush(Color.FromRgb(0, 60, 120))));
                 headerStyle.Setters.Add(new Setter(DataGridColumnHeader.ForegroundProperty, new SolidColorBrush(Colors.Orange)));
                 headerStyle.Setters.Add(new Setter(DataGridColumnHeader.FontWeightProperty, FontWeights.Bold));
+                headerStyle.Setters.Add(new Setter(DataGridColumnHeader.BorderBrushProperty, lineBrush));
+                headerStyle.Setters.Add(new Setter(DataGridColumnHeader.BorderThicknessProperty, new Thickness(0, 0, 1, 1)));
                 ReferenceDataGrid.ColumnHeaderStyle = headerStyle;
 
                 var rowStyle = new Style(typeof(DataGridRow));
                 rowStyle.Setters.Add(new Setter(DataGridRow.ForegroundProperty, new SolidColorBrush(Colors.Black)));
+                rowStyle.Setters.Add(new Setter(DataGridRow.BorderBrushProperty, lineBrush));
+                rowStyle.Setters.Add(new Setter(DataGridRow.BorderThicknessProperty, new Thickness(0, 0, 0, 1)));
                 ReferenceDataGrid.RowStyle = rowStyle;
             }
         }
@@ -346,5 +359,24 @@ namespace EWS_NSK_WPF
         {
             MessageBox.Show($"Сохранение изменений будет реализовано.\nStaff_ID: {currentStaffId}, Роль: {userRole}", "Информация", MessageBoxButton.OK, MessageBoxImage.Information);
         }
+
+        private void FontSizeSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            if (ReferenceDataGrid != null)
+            {
+                ReferenceDataGrid.FontSize = e.NewValue;
+            }
+        }
+
+        private void DataGrid_PreviewMouseWheel(object sender, System.Windows.Input.MouseWheelEventArgs e)
+        {
+            if (System.Windows.Input.Keyboard.Modifiers == System.Windows.Input.ModifierKeys.Control)
+            {
+                double delta = e.Delta > 0 ? 1 : -1;
+                double newSize = Math.Max(9, Math.Min(16, ReferenceDataGrid.FontSize + delta));
+                ReferenceDataGrid.FontSize = newSize;
+                if (FontSizeSlider != null) FontSizeSlider.Value = newSize;
+                e.Handled = true; // не даём таблице скроллиться
+            }
+        }        }       
     }
-}

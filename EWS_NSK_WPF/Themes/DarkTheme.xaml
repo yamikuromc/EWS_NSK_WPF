@@ -42,4 +42,8 @@
         <Setter Property="IsReadOnly" Value="True"/>
     </Style>
 
+
+    <SolidColorBrush x:Key="DataGridGridLinesBrush" Color="#5A5A7A"/>
+
+
 </ResourceDictionary>

@@ -12,12 +12,26 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <!-- ВЕРХНЯЯ ЧАСТЬ: Заголовок -->
+        <!-- ВЕРХНЯЯ ЧАСТЬ: Заголовок и регулятор шрифта -->
         <Grid Grid.Row="0" Margin="0,0,0,10">
-            <StackPanel>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Grid.Column="0">
                 <TextBlock Text="ФОРМИРОВАНИЕ ОТЧЕТОВ" FontSize="22" FontWeight="Bold" Foreground="Orange"/>
                 <TextBlock x:Name="UserInfoLabel" FontSize="12" Foreground="White" Margin="0,4,0,0"/>
                 <TextBlock x:Name="PermissionsLabel" FontSize="11" Foreground="Orange" Margin="0,2,0,0"/>
+            </StackPanel>
+
+            <!-- Регулятор размера шрифта -->
+            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                <TextBlock Text="A" FontSize="10" Foreground="White" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                <Slider x:Name="FontSizeSlider" Width="100" Minimum="9" Maximum="16" Value="11" 
+                TickFrequency="1" IsSnapToTickEnabled="True"
+                ValueChanged="FontSizeSlider_ValueChanged"/>
+                <TextBlock Text="A" FontSize="14" Foreground="White" VerticalAlignment="Center" Margin="5,0,0,0"/>
             </StackPanel>
         </Grid>
 
@@ -48,29 +62,67 @@
                 <!-- Таблица превью (показывает, что пойдет в отчет) -->
                 <Border Grid.Row="0" CornerRadius="4" BorderBrush="Orange" BorderThickness="1" Padding="4" Margin="0,0,0,10" Background="White">
                     <DataGrid x:Name="PreviewDataGrid" 
-                              AutoGenerateColumns="True" 
-                              IsReadOnly="True" 
-                              CanUserAddRows="False"
-                              HeadersVisibility="Column"
-                              FontSize="11"
-                              GridLinesVisibility="Horizontal"
-                              EnableRowVirtualization="True"
-                              Background="White"
-                              Foreground="Black"
-                              RowBackground="White"
-                              AlternatingRowBackground="#F5F5F5">
+          AutoGenerateColumns="True" 
+          ColumnWidth="Auto"
+          IsReadOnly="True" 
+          CanUserAddRows="False"
+          HeadersVisibility="Column"
+          FontSize="11"
+          GridLinesVisibility="All"
+          EnableRowVirtualization="True"
+          Foreground="{DynamicResource DataGridForeground}"
+                   Background="{DynamicResource DataGridBackground}"
+          RowBackground="{DynamicResource DataGridRowBackground}"
+          AlternatingRowBackground="{DynamicResource DataGridAltRowBackground}"
+          BorderThickness="0"
+          ScrollViewer.HorizontalScrollBarVisibility="Auto"
+          ScrollViewer.VerticalScrollBarVisibility="Auto">
+
                         <DataGrid.ColumnHeaderStyle>
                             <Style TargetType="DataGridColumnHeader">
                                 <Setter Property="Background" Value="#003C78"/>
                                 <Setter Property="Foreground" Value="Orange"/>
                                 <Setter Property="FontWeight" Value="Bold"/>
-                                <Setter Property="Padding" Value="6,3"/>
+                                <Setter Property="Padding" Value="12,8"/>
                                 <Setter Property="BorderThickness" Value="0"/>
+                                <Setter Property="HorizontalContentAlignment" Value="Left"/>
                             </Style>
                         </DataGrid.ColumnHeaderStyle>
+
+                        <DataGrid.CellStyle>
+                            <Style TargetType="DataGridCell">
+                                <Setter Property="Padding" Value="12,6"/>
+                                <Setter Property="BorderBrush" Value="{DynamicResource DataGridGridLinesBrush}"/>
+                                <Setter Property="BorderThickness" Value="0,0,1,0"/>
+                                <Setter Property="Background" Value="Transparent"/>
+                                <Setter Property="Foreground" Value="{DynamicResource DataGridForeground}"/>
+                                <Setter Property="HorizontalContentAlignment" Value="Left"/>
+                                <Setter Property="VerticalContentAlignment" Value="Center"/>
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="DataGridCell">
+                                            <Border Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            Padding="{TemplateBinding Padding}">
+                                                <ContentPresenter VerticalAlignment="Center"/>
+                                            </Border>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                                <Style.Triggers>
+                                    <Trigger Property="IsSelected" Value="True">
+                                        <Setter Property="Background" Value="#2196F3"/>
+                                        <Setter Property="Foreground" Value="White"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </DataGrid.CellStyle>
+                        
                         <DataGrid.RowStyle>
                             <Style TargetType="DataGridRow">
-                                <Setter Property="Foreground" Value="Black"/>
+                                <Setter Property="BorderBrush" Value="{DynamicResource DataGridGridLinesBrush}"/>
+                                <Setter Property="BorderThickness" Value="0,0,0,1"/>
                             </Style>
                         </DataGrid.RowStyle>
                     </DataGrid>
