@@ -1,7 +1,7 @@
-﻿<Window x:Class="EWS_NSK_WPF.ReferencesWindow"
+﻿<Window x:Class="EWS_NSK_WPF.Views.ReferencesWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:local="clr-namespace:EWS_NSK_WPF"
+        xmlns:local="clr-namespace:EWS_NSK_WPF.Converters"
         Title="Справочники" 
         WindowState="Maximized"
         WindowStartupLocation="CenterOwner"
@@ -63,6 +63,7 @@
                     <Button Content="Характеристики" FontSize="11" Foreground="White" Background="Transparent" BorderBrush="Transparent" HorizontalContentAlignment="Left" Padding="6,6" Margin="0,1" Cursor="Hand" Click="ReferenceItem_Click" Tag="tbl_EWS_Type"/>
                     <Button Content="Параметры проверок" FontSize="11" Foreground="White" Background="Transparent" BorderBrush="Transparent" HorizontalContentAlignment="Left" Padding="6,6" Margin="0,1" Cursor="Hand" Click="ReferenceItem_Click" Tag="tbl_CheckEWS_StatusEWS"/>
                     <Button Content="Балансодержатели" FontSize="11" Foreground="White" Background="Transparent" BorderBrush="Transparent" HorizontalContentAlignment="Left" Padding="6,6" Margin="0,1" Cursor="Hand" Click="ReferenceItem_Click" Tag="tbl_EWS_Owner"/>
+                    <Button Content="Пожарные гидранты" FontSize="11" Foreground="White" Background="Transparent" BorderBrush="Transparent" HorizontalContentAlignment="Left" Padding="6,6" Margin="0,1" Cursor="Hand" Click="ReferenceItem_Click" Tag="tbl_EWS"/>
                 </StackPanel>
             </Border>
 

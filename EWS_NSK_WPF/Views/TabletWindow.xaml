@@ -1,4 +1,4 @@
-﻿<Window x:Class="EWS_NSK_WPF.TabletWindow"
+﻿<Window x:Class="EWS_NSK_WPF.Views.TabletWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Планшет ИНППВ" Height="600" Width="900"

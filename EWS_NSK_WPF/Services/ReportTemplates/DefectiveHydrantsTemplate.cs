@@ -7,10 +7,6 @@ using Xceed.Words.NET;
 
 namespace EWS_NSK_WPF.Services.ReportTemplates
 {
-    /// <summary>
-    /// Шаблон "Список неисправных пожарных гидрантов и водоемов"
-    /// По образцу документов ПСЧ-37 за 2022-2024 годы
-    /// </summary>
     public class DefectiveHydrantsTemplate : IReportTemplate
     {
         public string TemplateName => "Список неисправных ПГ";
@@ -19,7 +15,7 @@ namespace EWS_NSK_WPF.Services.ReportTemplates
         {
             using var doc = DocX.Create(outputPath);
 
-            // Извлекаем параметры
+            // Параметры
             string territory = parameters.TryGetValue("territory", out var t) ? t?.ToString() ?? "" : "";
             string season = parameters.TryGetValue("season", out var s) ? s?.ToString() ?? "" : "";
             int year = parameters.TryGetValue("year", out var y) && y is int yi ? yi : DateTime.Now.Year;
@@ -33,50 +29,34 @@ namespace EWS_NSK_WPF.Services.ReportTemplates
                 .FontSize(12).Bold().Alignment = Alignment.center;
             doc.InsertParagraph("\n");
 
-            // 2. ГРУППИРОВКА ПО ТИПАМ
+            // 2. ГРУППИРОВКА
             var grouped = hydrants.GroupBy(h => ClassifyOwner(h.OwnerName));
 
             int globalNumber = 1;
 
             foreach (var group in grouped.OrderBy(g => g.Key))
-            {// Заголовок секции
+            {
+                // Заголовок секции (Муниципальные / Ведомственные / Бесхозные)
                 doc.InsertParagraph(group.Key)
-                    .FontSize(11)
-                    .Bold()
-                    .UnderlineStyle(UnderlineStyle.singleLine);
+                    .FontSize(11).Bold();
 
-                // Таблица
-                var table = doc.AddTable(group.Count() + 1, 10);
-                table.Design = TableDesign.TableGrid;
-
-                // Заголовки колонок
-                string[] headers = { "№", "Наименование населенного пункта", "Адрес привязки",
-                    "Наименование предприятия", "Количество ПГ", "Диаметр водовода",
-                    "Количество ПВ", "Емкость водоема", "Дата обнаружения неисправности",
-                    "Отметка об устранении неисправности" };
-
-                for (int col = 0; col < headers.Length; col++)
-                    table.Rows[0].Cells[col].Paragraphs[0].Append(headers[col]).Bold().FontSize(9);
-
-                // Данные
-                int row = 1;
+                // Нумерованный список
+                int itemNumber = 1;
                 foreach (var h in group)
                 {
-                    table.Rows[row].Cells[0].Paragraphs[0].Append(globalNumber.ToString()).FontSize(9);
-                    table.Rows[row].Cells[1].Paragraphs[0].Append(h.AddressObjectAdm ?? "").FontSize(9);
-                    table.Rows[row].Cells[2].Paragraphs[0].Append($"{h.AddressObjectName} {h.EwsHouseNumber}".Trim()).FontSize(9);
-                    table.Rows[row].Cells[3].Paragraphs[0].Append(h.OwnerName ?? "").FontSize(9);
-                    table.Rows[row].Cells[4].Paragraphs[0].Append("1").FontSize(9);
-                    table.Rows[row].Cells[5].Paragraphs[0].Append(h.EwsDiameterWsCod > 0 ? $"К-{h.EwsDiameterWsCod}" : "").FontSize(9);
-                    table.Rows[row].Cells[6].Paragraphs[0].Append("").FontSize(9);
-                    table.Rows[row].Cells[7].Paragraphs[0].Append("").FontSize(9);
-                    table.Rows[row].Cells[8].Paragraphs[0].Append(DateTime.Now.ToString("dd.MM.yyyy")).FontSize(9);
-                    table.Rows[row].Cells[9].Paragraphs[0].Append("").FontSize(9);
-                    row++;
+                    string address = $"{h.AddressObjectName} {h.EwsHouseNumber}".Trim();
+                    string defect = h.EwsStateNote ?? "";
+
+                    string line = $"{itemNumber}. {address} – {defect}";
+
+                    var p = doc.InsertParagraph(line);
+                    p.FontSize(11);
+                    p.IndentationBefore = 720; // 720 twips ≈ 1.27 см (стандартный абзацный отступ как в Word)
+
+                    itemNumber++;
                     globalNumber++;
                 }
 
-                doc.InsertTable(table);
                 doc.InsertParagraph("\n");
             }
 
@@ -86,7 +66,7 @@ namespace EWS_NSK_WPF.Services.ReportTemplates
             doc.InsertParagraph(authorName).FontSize(11);
             doc.InsertParagraph("\n\n");
 
-            // 4. СВОДНАЯ ТАБЛИЦА
+            // 4. СВОДНАЯ ТАБЛИЦА (она есть в образце 2024 года)
             var summaryTable = doc.AddTable(4, 3);
             summaryTable.Design = TableDesign.TableGrid;
 
@@ -110,9 +90,6 @@ namespace EWS_NSK_WPF.Services.ReportTemplates
             doc.Save();
         }
 
-        /// <summary>
-        /// Классифицирует балансодержателя по категориям
-        /// </summary>
         private string ClassifyOwner(string ownerName)
         {
             if (string.IsNullOrEmpty(ownerName) || ownerName == "Бесхозный")

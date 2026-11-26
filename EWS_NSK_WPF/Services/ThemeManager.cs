@@ -5,8 +5,10 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using EWS_NSK_WPF.Views;      
 
-namespace EWS_NSK_WPF
+
+namespace EWS_NSK_WPF.Services
 {
     public static class ThemeManager
     {
@@ -299,19 +301,33 @@ namespace EWS_NSK_WPF
         // Применение темы специально для окна Отчетов (по аналогии со Справочниками)
         public static void ApplyThemeToReportsWindow(Window window)
         {
-            if (window is ReportsWindow repWindow)
+            bool isDark = IsDarkTheme;
+
+            // Фон окна
+            window.Background = isDark
+                ? new SolidColorBrush(Color.FromRgb(10, 10, 30))
+                : new SolidColorBrush(Color.FromRgb(0, 40, 100));
+
+            // Левая панель типов отчётов
+            if (window.FindName("LeftPanelBorder") is System.Windows.Controls.Border leftPanel)
             {
-                if (_isDarkTheme)
-                {
-                    repWindow.Background = new SolidColorBrush(Color.FromRgb(10, 10, 30));
-                    // Перекрашиваем элементы отчета
-                    SetControlTheme(repWindow, isDark: true);
-                }
-                else
-                {
-                    repWindow.Background = new SolidColorBrush(Color.FromRgb(0, 40, 100)); // Как в ReferencesWindow
-                    SetControlTheme(repWindow, isDark: false);
-                }
+                leftPanel.Background = isDark
+                    ? new SolidColorBrush(Color.FromRgb(20, 20, 50))
+                    : new SolidColorBrush(Color.FromRgb(0, 60, 120));
+                leftPanel.BorderBrush = isDark
+                    ? new SolidColorBrush(Color.FromRgb(90, 90, 122))
+                    : new SolidColorBrush(Colors.Orange);
+            }
+
+            // Подложка вокруг листа А4 (как фон страницы в Word)
+            if (window.FindName("SheetBackdropBorder") is System.Windows.Controls.Border backdrop)
+            {
+                backdrop.Background = isDark
+                    ? new SolidColorBrush(Color.FromRgb(42, 42, 62))
+                    : new SolidColorBrush(Color.FromRgb(232, 232, 232));
+                backdrop.BorderBrush = isDark
+                    ? new SolidColorBrush(Color.FromRgb(90, 90, 122))
+                    : new SolidColorBrush(Color.FromRgb(85, 85, 85));
             }
         }
 

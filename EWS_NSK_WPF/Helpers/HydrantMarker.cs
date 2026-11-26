@@ -7,6 +7,9 @@ using System.Windows.Shapes;
 using GMap.NET;
 using GMap.NET.WindowsPresentation;
 using EWS_NSK_WPF.Models;
+using EWS_NSK_WPF.Views;       // Чтобы видеть другие окна при их вызове
+using EWS_NSK_WPF.Services;    // Для ThemeManager
+
 
 namespace EWS_NSK_WPF.Helpers
 {

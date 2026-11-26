@@ -9,28 +9,32 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Data;
 using System.Windows.Input;
+using EWS_NSK_WPF.Views;
 using System.Windows.Media;
+using EWS_NSK_WPF.Services;
+using EWS_NSK_WPF.Models;
+using EWS_NSK_WPF.Services.ReportTemplates;
 
-namespace EWS_NSK_WPF
+
+namespace EWS_NSK_WPF.Views
 {
-    // Конвертер для скрытия подсказки поиска
-    public class EmptyToVisibilityConverter : IValueConverter
-    {
-        public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
-        {
-            return string.IsNullOrEmpty(value as string) ? Visibility.Visible : Visibility.Collapsed;
-        }
-
-        public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
-        {
-            throw new NotImplementedException();
-        }
-    }
 
     public partial class ReferencesWindow : Window
     {
         private static readonly Dictionary<string, Dictionary<string, string>> ColumnTranslations = new Dictionary<string, Dictionary<string, string>>
         {
+            ["tbl_EWS"] = new Dictionary<string, string>
+            {
+                ["EWS_Map_ID"] = "ID карты",
+                ["Номер ПГ"] = "№ ПГ",
+                ["Статус ИНППВ"] = "Статус",
+                ["Ведомственная принадлежность"] = "Балансодержатель",
+                ["Диаметр сети"] = "Диаметр",
+                ["Адресный объект - COD"] = "Код адреса",
+                ["Номер дома"] = "Дом",
+                ["Расположение указателя"] = "Привязка",
+                ["Местоположение ПГ (примечание)"] = "Примечание"
+            },
             ["tbl_EWS_Type"] = new Dictionary<string, string>
             {
                 ["Type_ID"] = "№",
@@ -88,6 +92,7 @@ namespace EWS_NSK_WPF
 
         private static readonly Dictionary<string, string> ReferenceTitles = new Dictionary<string, string>
         {
+            ["tbl_EWS"] = "Пожарные гидранты",
             ["tbl_Fire3_Unit"] = "Подразделения ППС",
             ["tbl_RS4_AddressObject"] = "Адресные объекты",
             ["tbl_EWS_Type"] = "Характеристики",
@@ -226,6 +231,13 @@ namespace EWS_NSK_WPF
                     }
 
                     currentDataTable = data;
+
+                    // Если это таблица гидрантов, добавляем фильтр по статусу
+                    if (tableName == "tbl_EWS")
+                    {
+                        AddStatusFilter();
+                    }
+
                     ReferenceDataGrid.ItemsSource = currentDataTable.DefaultView;
                 }
                 else
@@ -378,5 +390,47 @@ namespace EWS_NSK_WPF
                 if (FontSizeSlider != null) FontSizeSlider.Value = newSize;
                 e.Handled = true; // не даём таблице скроллиться
             }
-        }        }       
-    }
+        }
+        private void AddStatusFilter()
+        {
+            // Создаём ComboBox для фильтра по статусу
+            var statusFilter = new ComboBox
+            {
+                Width = 150,
+                Height = 28,
+                Margin = new Thickness(5, 0, 0, 0)
+            };
+
+            statusFilter.Items.Add(new ComboBoxItem { Content = "Все статусы" });
+            statusFilter.Items.Add(new ComboBoxItem { Content = "Исправен" });
+            statusFilter.Items.Add(new ComboBoxItem { Content = "Неисправен" });
+            statusFilter.Items.Add(new ComboBoxItem { Content = "Требует проверки" });
+            statusFilter.Items.Add(new ComboBoxItem { Content = "Отсутствует" });
+            statusFilter.SelectedIndex = 0;
+
+            statusFilter.SelectionChanged += (s, e) =>
+            {
+                if (currentDataTable == null) return;
+
+                int selectedIndex = statusFilter.SelectedIndex;
+                DataView view = currentDataTable.DefaultView;
+
+                if (selectedIndex == 0)
+                {
+                    view.RowFilter = string.Empty;
+                }
+                else
+                {
+                    view.RowFilter = $"[Статус] = '{statusFilter.SelectedItem}'";
+                }
+
+                ReferenceDataGrid.ItemsSource = view;
+            };
+
+            // Находим панель поиска и добавляем фильтр
+            // (это упрощённая версия, полный код зависит от структуры XAML)
+        }
+
+
+    }   }
+

@@ -8,7 +8,7 @@ using System.Windows;
 using Microsoft.Data.Sqlite;
 using EWS_NSK_WPF.Models;
 
-namespace EWS_NSK_WPF
+namespace EWS_NSK_WPF.Services
 {
     public class DatabaseHelper
     {

@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using EWS_NSK_WPF.Core;
+using EWS_NSK_WPF.Services;
 
 namespace EWS_NSK_WPF.ViewModels
 {

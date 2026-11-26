@@ -1,4 +1,4 @@
-﻿namespace EWS_NSK_WPF
+﻿namespace EWS_NSK_WPF.Models
 {
     // Перечисление режимов работы окна
     public enum WindowMode

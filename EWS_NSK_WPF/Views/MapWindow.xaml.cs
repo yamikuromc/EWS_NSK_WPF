@@ -13,8 +13,9 @@ using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Input;
+using EWS_NSK_WPF.Views;
 
-namespace EWS_NSK_WPF
+namespace EWS_NSK_WPF.Views
 {
 
     public partial class MapWindow : Window

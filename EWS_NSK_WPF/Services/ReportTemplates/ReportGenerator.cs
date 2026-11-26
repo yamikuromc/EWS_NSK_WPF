@@ -17,9 +17,9 @@ namespace EWS_NSK_WPF.Services.ReportTemplates
         {
             return reportType switch
             {
+                "All" => new DefectiveHydrantsTemplate(), // Временно используем тот же шаблон
                 "Defective" => new DefectiveHydrantsTemplate(),
-                // "Analysis" => new AnalysisTemplate(), // добавим позже
-                // "Reconstruction" => new ReconstructionTemplate(), // добавим позже
+                "ByOwner" => new DefectiveHydrantsTemplate(), // Временно используем тот же шаблон
                 _ => throw new ArgumentException($"Неизвестный тип отчёта: {reportType}")
             };
         }

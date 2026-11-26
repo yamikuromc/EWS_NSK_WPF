@@ -5,7 +5,8 @@ using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using Microsoft.Data.Sqlite; // <-- ДОБАВЛЕНО: для работы с БД
+using Microsoft.Data.Sqlite;
+using EWS_NSK_WPF.Services; // <-- ДОБАВЛЕНО: для работы с БД
 
 namespace EWS_NSK_WPF.ViewModels
 {

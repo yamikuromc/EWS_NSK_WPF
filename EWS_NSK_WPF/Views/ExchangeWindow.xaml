@@ -1,4 +1,4 @@
-﻿<Window x:Class="EWS_NSK_WPF.ExchangeWindow"
+﻿<Window x:Class="EWS_NSK_WPF.Views.ExchangeWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Обмен данными" Height="600" Width="900"

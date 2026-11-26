@@ -8,8 +8,11 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using EWS_NSK_WPF.Views;
+using EWS_NSK_WPF.Services;
+using EWS_NSK_WPF.Models;
 
-namespace EWS_NSK_WPF
+namespace EWS_NSK_WPF.Views
 {
     public partial class MainWindow : Window
     {

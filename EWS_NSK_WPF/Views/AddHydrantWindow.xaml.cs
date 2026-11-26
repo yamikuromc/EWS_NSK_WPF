@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Windows;
 using EWS_NSK_WPF.Helpers;
+using EWS_NSK_WPF.Services;
 using EWS_NSK_WPF.ViewModels;
+using EWS_NSK_WPF.Views;
 
-namespace EWS_NSK_WPF
+namespace EWS_NSK_WPF.Views
 {
     public partial class AddHydrantWindow : Window
     {
