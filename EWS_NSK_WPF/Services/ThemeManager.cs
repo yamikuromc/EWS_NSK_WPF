@@ -13,6 +13,7 @@ namespace EWS_NSK_WPF.Services
     public static class ThemeManager
     {
         private static bool _isDarkTheme = false;
+        public static event EventHandler ThemeChanged;
         private static string settingsFilePath = Path.Combine(
             AppDomain.CurrentDomain.BaseDirectory, "theme_settings.txt");
 
@@ -24,6 +25,7 @@ namespace EWS_NSK_WPF.Services
             {
                 _isDarkTheme = value;
                 SaveThemeSetting();
+                ThemeChanged?.Invoke(null, EventArgs.Empty);   
             }
         }
 
@@ -306,66 +308,52 @@ namespace EWS_NSK_WPF.Services
             // Фон окна
             window.Background = isDark
                 ? new SolidColorBrush(Color.FromRgb(10, 10, 30))
-                : new SolidColorBrush(Color.FromRgb(0, 40, 100));
+                : new SolidColorBrush(Color.FromRgb(245, 245, 245)); // #F5F5F5 как справочники
 
             // Левая панель типов отчётов
-            if (window.FindName("LeftPanelBorder") is System.Windows.Controls.Border leftPanel)
+            if (window.FindName("LeftPanelBorder") is Border leftPanel)
             {
                 leftPanel.Background = isDark
                     ? new SolidColorBrush(Color.FromRgb(20, 20, 50))
-                    : new SolidColorBrush(Color.FromRgb(0, 60, 120));
+                    : new SolidColorBrush(Colors.White);
                 leftPanel.BorderBrush = isDark
                     ? new SolidColorBrush(Color.FromRgb(90, 90, 122))
-                    : new SolidColorBrush(Colors.Orange);
+                    : new SolidColorBrush(Color.FromRgb(208, 208, 208));
+
+                // Покраска содержимого левой панели (заголовок + кнопки)
+                if (leftPanel.Child is StackPanel sp)
+                {
+                    var textColor = isDark ? Colors.White : Color.FromRgb(51, 51, 51);
+                    foreach (var child in sp.Children)
+                    {
+                        if (child is TextBlock tb)
+                            tb.Foreground = new SolidColorBrush(Colors.Orange);
+                        else if (child is Button btn)
+                            btn.Foreground = new SolidColorBrush(textColor);
+                    }
+                }
             }
 
-            // Подложка вокруг листа А4 (как фон страницы в Word)
-            if (window.FindName("SheetBackdropBorder") is System.Windows.Controls.Border backdrop)
+            // Подложка вокруг листа А4
+            if (window.FindName("SheetBackdropBorder") is Border backdrop)
             {
                 backdrop.Background = isDark
                     ? new SolidColorBrush(Color.FromRgb(42, 42, 62))
                     : new SolidColorBrush(Color.FromRgb(232, 232, 232));
                 backdrop.BorderBrush = isDark
                     ? new SolidColorBrush(Color.FromRgb(90, 90, 122))
-                    : new SolidColorBrush(Color.FromRgb(85, 85, 85));
-            }
-        }
-
-        private static void SetControlTheme(ReportsWindow window, bool isDark)
-        {
-            // Находим элементы по имени и красим их, как в ReferencesWindow
-            if (window.FindName("LeftPanelBorder") is Border leftPanel)
-            {
-                leftPanel.Background = isDark ? new SolidColorBrush(Color.FromRgb(20, 20, 50)) : new SolidColorBrush(Color.FromRgb(0, 60, 120));
-                leftPanel.BorderBrush = new SolidColorBrush(Colors.Orange);
+                    : new SolidColorBrush(Color.FromRgb(208, 208, 208));
             }
 
-            if (window.FindName("PreviewDataGrid") is DataGrid grid)
-            {
-                grid.Background = isDark ? new SolidColorBrush(Color.FromRgb(20, 20, 50)) : new SolidColorBrush(Colors.White);
-                grid.Foreground = isDark ? new SolidColorBrush(Colors.White) : new SolidColorBrush(Colors.Black);
-                grid.RowBackground = isDark ? new SolidColorBrush(Color.FromRgb(25, 25, 55)) : new SolidColorBrush(Colors.White);
-                grid.AlternatingRowBackground = isDark ? new SolidColorBrush(Color.FromRgb(35, 35, 70)) : new SolidColorBrush(Color.FromRgb(240, 248, 255));
-                grid.BorderBrush = isDark ? new SolidColorBrush(Color.FromRgb(60, 60, 100)) : new SolidColorBrush(Colors.Transparent);
-
-                var lineBrush = isDark
-                    ? new SolidColorBrush(Color.FromRgb(90, 90, 122))    // #5A5A7A
-                    : new SolidColorBrush(Color.FromRgb(208, 208, 208)); // #D0D0D0
-
-                var headerStyle = new Style(typeof(DataGridColumnHeader));
-                headerStyle.Setters.Add(new Setter(DataGridColumnHeader.BackgroundProperty, new SolidColorBrush(Color.FromRgb(0, 60, 120))));
-                headerStyle.Setters.Add(new Setter(DataGridColumnHeader.ForegroundProperty, new SolidColorBrush(Colors.Orange)));
-                headerStyle.Setters.Add(new Setter(DataGridColumnHeader.FontWeightProperty, FontWeights.Bold));
-                headerStyle.Setters.Add(new Setter(DataGridColumnHeader.BorderBrushProperty, lineBrush));
-                headerStyle.Setters.Add(new Setter(DataGridColumnHeader.BorderThicknessProperty, new Thickness(0, 0, 1, 1)));
-                grid.ColumnHeaderStyle = headerStyle;
-
-                var rowStyle = new Style(typeof(DataGridRow));
-                rowStyle.Setters.Add(new Setter(DataGridRow.ForegroundProperty, isDark ? new SolidColorBrush(Colors.White) : new SolidColorBrush(Colors.Black)));
-                rowStyle.Setters.Add(new Setter(DataGridRow.BorderBrushProperty, lineBrush));
-                rowStyle.Setters.Add(new Setter(DataGridRow.BorderThicknessProperty, new Thickness(0, 0, 0, 1)));
-                grid.RowStyle = rowStyle;
-            }
+            // Заголовок и подписи
+            if (window.FindName("TitleTextBlock") is TextBlock title)
+                title.Foreground = new SolidColorBrush(Colors.Orange);
+            if (window.FindName("UserInfoLabel") is TextBlock user)
+                user.Foreground = isDark
+                    ? new SolidColorBrush(Colors.White)
+                    : new SolidColorBrush(Color.FromRgb(51, 51, 51));
+            if (window.FindName("PermissionsLabel") is TextBlock perm)
+                perm.Foreground = new SolidColorBrush(Colors.Orange);
         }
     }
 }

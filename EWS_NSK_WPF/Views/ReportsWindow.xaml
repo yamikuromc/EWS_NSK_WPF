@@ -4,7 +4,7 @@
         Title="Формирование отчетов" 
         WindowState="Maximized"
         WindowStartupLocation="CenterOwner"
-        Background="#002864">
+        Background="#F5F5F5">
 
     <Grid Margin="10">
         <Grid.RowDefinitions>
@@ -29,31 +29,39 @@
             <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                 <TextBlock Text="A" FontSize="10" Foreground="White" VerticalAlignment="Center" Margin="0,0,5,0"/>
                 <Slider x:Name="FontSizeSlider" Width="100" Minimum="9" Maximum="16" Value="11" 
-                        TickFrequency="1" IsSnapToTickEnabled="True"
-                        ValueChanged="FontSizeSlider_ValueChanged"/>
-                <TextBlock Text="A" FontSize="14" Foreground="White" VerticalAlignment="Center" Margin="5,0,0,0"/>
+        TickFrequency="1" IsSnapToTickEnabled="True"
+        ValueChanged="FontSizeSlider_ValueChanged"/>
+                <TextBlock x:Name="FontA1" Text="A" FontSize="10" Foreground="White" VerticalAlignment="Center" Margin="0,0,5,0"/>
             </StackPanel>
         </Grid>
 
         <!-- ОСНОВНАЯ ЧАСТЬ: Левая панель + Правая область -->
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="220"/>
+                <ColumnDefinition Width="180"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
             <!-- ЛЕВАЯ ПАНЕЛЬ: Выбор типа отчета -->
-            <Border x:Name="LeftPanelBorder" Grid.Column="0" CornerRadius="4" BorderBrush="Orange" BorderThickness="1" Margin="0,0,5,0" Padding="8" Background="#003C78">
+            <Border x:Name="LeftPanelBorder" Grid.Column="0" Background="White" CornerRadius="4" BorderBrush="#D0D0D0" BorderThickness="1" Margin="0,0,5,0" Padding="8">
                 <StackPanel>
                     <TextBlock Text="Типы отчетов:" FontSize="12" FontWeight="Bold" Foreground="Orange" Margin="0,0,0,8"/>
-                    <Button Content="📄 Общий список гидрантов" FontSize="11" Foreground="White" Background="Transparent" BorderBrush="Transparent" HorizontalContentAlignment="Left" Padding="6,6" Margin="0,1" Cursor="Hand" Click="ReportType_Click" Tag="All"/>
-                    <Button Content="⚠️ Ведомость неисправных" FontSize="11" Foreground="White" Background="Transparent" BorderBrush="Transparent" HorizontalContentAlignment="Left" Padding="6,6" Margin="0,1" Cursor="Hand" Click="ReportType_Click" Tag="Defective"/>
-                    <Button Content="🏢 По балансодержателям" FontSize="11" Foreground="White" Background="Transparent" BorderBrush="Transparent" HorizontalContentAlignment="Left" Padding="6,6" Margin="0,1" Cursor="Hand" Click="ReportType_Click" Tag="ByOwner"/>
+                    <Button Content="📄 Общий список гидрантов" FontSize="11" Foreground="#333333" Background="Transparent" BorderBrush="Transparent" HorizontalContentAlignment="Left" Padding="6,6" Margin="0,1" Cursor="Hand" Click="ReportType_Click" Tag="All"/>
+                    <Button Content="⚠️ Ведомость неисправных" FontSize="11" Foreground="#333333" Background="Transparent" BorderBrush="Transparent" HorizontalContentAlignment="Left" Padding="6,6" Margin="0,1" Cursor="Hand" Click="ReportType_Click" Tag="Defective"/>
+                    <Button Content="🏢 По балансодержателям" FontSize="11" Foreground="#333333" Background="Transparent" BorderBrush="Transparent" HorizontalContentAlignment="Left" Padding="6,6" Margin="0,1" Cursor="Hand" Click="ReportType_Click" Tag="ByOwner"/>
                 </StackPanel>
             </Border>
+            <!-- Кнопка "Новый шаблон" только для главного администратора -->
+            <Button x:Name="NewTemplateButton" Content="➕ Новый шаблон" FontSize="11" Foreground="White" 
+        Background="#FF9800" BorderBrush="Transparent" 
+        HorizontalAlignment="Left" VerticalAlignment="Top"
+        HorizontalContentAlignment="Left" 
+        Width="180" Height="28"
+        Padding="6,6" Margin="0,8,0,1" Cursor="Hand" Click="NewTemplateButton_Click" 
+        Visibility="Collapsed"/>
 
             <!-- ПРАВАЯ ЧАСТЬ: Контейнер для Листа А4 -->
-            <Border x:Name="SheetBackdropBorder" Grid.Column="1" CornerRadius="4" BorderThickness="1">
+            <Border x:Name="SheetBackdropBorder" Grid.Column="1" CornerRadius="4" BorderBrush="#D0D0D0" BorderThickness="1" Background="#E8E8E8">
                 <ContentControl x:Name="ReportFormContainer" HorizontalContentAlignment="Center" VerticalContentAlignment="Top"/>
             </Border>
         </Grid>

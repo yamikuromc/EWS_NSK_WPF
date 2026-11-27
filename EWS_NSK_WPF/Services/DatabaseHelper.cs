@@ -247,5 +247,129 @@ namespace EWS_NSK_WPF.Services
             }
             return hydrants;
         }
-    }
-}
+
+
+        // === Справочники для шаблонов отчётов ===
+
+        /// <summary>
+        /// Уникальные территории (названия адресных объектов) для ComboBox в шапке отчёта.
+        /// </summary>
+        public static List<string> GetUniqueTerritories()
+        {
+            var territories = new List<string>();
+            string connectionString = $"Data Source={DbPath}";
+
+            using (var connection = new SqliteConnection(connectionString))
+            {
+                try
+                {
+                    connection.Open();
+                    string query = @"SELECT DISTINCT AddressObject_Name FROM tbl_RS4_AddressObject 
+                                     WHERE AddressObject_Name IS NOT NULL AND AddressObject_Name != '' 
+                                     ORDER BY AddressObject_Name;";
+
+                    using (var command = new SqliteCommand(query, connection))
+                    using (var reader = command.ExecuteReader())
+                    {
+                        while (reader.Read())
+                            territories.Add(reader.GetString(0));
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Ошибка загрузки территорий: {ex.Message}");
+                }
+            }
+
+            return territories.Count > 0
+                ? territories
+                : new List<string> { "р. п. Краснообск и п. Элитный" };
+        }
+
+        /// <summary>
+        /// Уникальные должности сотрудников (для ComboBox «Должность» в блоке «Составил»).
+        /// </summary>
+        public static List<string> GetStaffPositions()
+        {
+            var positions = new List<string>();
+            string connectionString = $"Data Source={DbPath}";
+
+            using (var connection = new SqliteConnection(connectionString))
+            {
+                try
+                {
+                    connection.Open();
+                    string query = @"SELECT DISTINCT Staff_post FROM tbl_Fire4_UnitStaff 
+                                     WHERE Staff_post IS NOT NULL AND Staff_post != '' 
+                                     ORDER BY Staff_post;";
+
+                    using (var command = new SqliteCommand(query, connection))
+                    using (var reader = command.ExecuteReader())
+                    {
+                        while (reader.Read())
+                            positions.Add(reader.GetString(0));
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Ошибка загрузки должностей: {ex.Message}");
+                }
+            }
+
+            return positions.Count > 0
+                ? positions
+                : new List<string> { "Начальник караула" };
+        }
+
+        /// <summary>
+        /// ФИО сотрудников (для ComboBox «ФИО» в блоке «Составил»).
+        /// </summary>
+        public static List<string> GetStaffNames()
+        {
+            var names = new List<string>();
+            string connectionString = $"Data Source={DbPath}";
+
+            using (var connection = new SqliteConnection(connectionString))
+            {
+                try
+                {
+                    connection.Open();
+                    string query = @"SELECT Staff_FIO FROM tbl_Fire4_UnitStaff 
+                                     WHERE Staff_FIO IS NOT NULL AND Staff_FIO != '' 
+                                     ORDER BY Staff_FIO;";
+
+                    using (var command = new SqliteCommand(query, connection))
+                    using (var reader = command.ExecuteReader())
+                    {
+                        while (reader.Read())
+                            names.Add(reader.GetString(0));
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Ошибка загрузки ФИО: {ex.Message}");
+                }
+            }
+
+            return names.Count > 0
+                ? names
+                : new List<string> { "—" };
+        }
+
+        public static string GetPositionByStaffName(string fio)
+        {
+            string connectionString = $"Data Source={DbPath}";
+            using (var connection = new SqliteConnection(connectionString))
+            {
+                try
+                {
+                    connection.Open();
+                    using var cmd = new SqliteCommand(
+                        "SELECT Staff_post FROM tbl_Fire4_UnitStaff WHERE Staff_FIO = @fio LIMIT 1", connection);
+                    cmd.Parameters.AddWithValue("@fio", fio);
+                    return cmd.ExecuteScalar()?.ToString() ?? "";
+                }
+                catch { return ""; }
+            }
+        }
+}   }   

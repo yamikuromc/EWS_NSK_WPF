@@ -2,6 +2,7 @@
 using System.Globalization;
 using System.Windows;
 using System.Windows.Data;
+using EWS_NSK_WPF.Views;
 
 namespace EWS_NSK_WPF.Converters
 {

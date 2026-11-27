@@ -8,8 +8,119 @@
         Background="#002864">
 
     <Window.Resources>
-        <!-- Конвертер для скрытия подсказки поиска, когда в поле есть текст -->
         <local:EmptyToVisibilityConverter x:Key="EmptyToVisibilityConverter"/>
+        <!-- Тёмный стиль ComboBox для числового фильтра -->
+        <Style x:Key="DarkComboStyle" TargetType="ComboBox">
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Background" Value="#2A2A4A"/>
+            <Setter Property="BorderBrush" Value="#5A5A7A"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Height" Value="24"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBox">
+                        <Grid>
+                            <ToggleButton Focusable="False" ClickMode="Press"
+                                  IsChecked="{Binding IsDropDownOpen, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}">
+                                <ToggleButton.Template>
+                                    <ControlTemplate TargetType="ToggleButton">
+                                        <Border Background="#2A2A4A" BorderBrush="#5A5A7A"
+                                        BorderThickness="1" CornerRadius="2">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="18"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Grid.Column="1" Text="▼" Foreground="Orange"
+                                                   FontSize="9" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Grid>
+                                        </Border>
+                                    </ControlTemplate>
+                                </ToggleButton.Template>
+                            </ToggleButton>
+                            <ContentPresenter Margin="6,0,22,0" VerticalAlignment="Center"
+                                      IsHitTestVisible="False"
+                                      Content="{TemplateBinding SelectionBoxItem}"/>
+                            <Popup IsOpen="{TemplateBinding IsDropDownOpen}" Placement="Bottom"
+                           AllowsTransparency="True" Focusable="False" PopupAnimation="Slide">
+                                <Border Background="#141432" BorderBrush="#5A5A7A" BorderThickness="1"
+                                MinWidth="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}"
+                                MaxHeight="200">
+                                    <ScrollViewer>
+                                        <StackPanel IsItemsHost="True"/>
+                                    </ScrollViewer>
+                                </Border>
+                            </Popup>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Тёмный стиль TextBox для поля значения -->
+        <Style x:Key="DarkTextBoxStyle" TargetType="TextBox">
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="CaretBrush" Value="White"/>
+            <Setter Property="Background" Value="#2A2A4A"/>
+            <Setter Property="BorderBrush" Value="#5A5A7A"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Height" Value="24"/>
+            <Setter Property="Padding" Value="4,2"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border Background="{TemplateBinding Background}"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{TemplateBinding BorderThickness}"
+                        CornerRadius="2">
+                            <ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding Padding}"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Шаблон заголовка колонки: имя + кнопка ▼ + ПУСТОЙ попап (содержимое строит код) -->
+        <DataTemplate x:Key="ColumnHeaderFilterTemplate">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0" Text="{Binding}" FontWeight="Bold" Foreground="Orange"
+                           TextTrimming="CharacterEllipsis"/>
+
+                <ToggleButton x:Name="FilterToggle" Grid.Row="1" Tag="{Binding}"
+              HorizontalAlignment="Stretch" Margin="0,4,0,0"
+              Padding="6,3" Background="#1A3A6A"
+              BorderBrush="#5A5A7A" BorderThickness="1" Cursor="Hand"
+              Checked="FilterToggle_Checked">
+                    <ToggleButton.Template>
+                        <ControlTemplate TargetType="ToggleButton">
+                            <Border Background="{TemplateBinding Background}"
+                    BorderBrush="{TemplateBinding BorderBrush}"
+                    BorderThickness="{TemplateBinding BorderThickness}"
+                    CornerRadius="2">
+                                <Grid>
+                                    <TextBlock Text="Фильтр ▼" Foreground="Orange" FontSize="9"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Grid>
+                            </Border>
+                        </ControlTemplate>
+                    </ToggleButton.Template>
+                </ToggleButton>
+
+                <!-- Попап ПУСТОЙ — содержимое создаётся кодом в FilterToggle_Checked -->
+                <Popup x:Name="FilterPopup" Grid.Row="1"
+                       PlacementTarget="{Binding ElementName=FilterToggle}"
+                       Placement="Bottom"
+                       IsOpen="{Binding IsChecked, ElementName=FilterToggle, Mode=TwoWay}"
+                       StaysOpen="False" AllowsTransparency="True" PopupAnimation="Fade"/>
+            </Grid>
+        </DataTemplate>
     </Window.Resources>
 
     <Grid Margin="10">
@@ -18,7 +129,7 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <!-- ВЕРХНЯЯ ЧАСТЬ: Заголовок и кнопки -->
+        <!-- ВЕРХНЯЯ ЧАСТЬ -->
         <Grid Grid.Row="0" Margin="0,0,0,10">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
@@ -30,23 +141,32 @@
                 <TextBlock x:Name="UserInfoLabel" FontSize="12" Foreground="White" Margin="0,4,0,0"/>
             </StackPanel>
 
-            <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
-                <Button x:Name="OpenMapButton" Content="🗺️ Открыть карту" Width="130" Height="28" 
-                        Background="#003C78" Foreground="White" BorderBrush="Orange" BorderThickness="1"
-                        Margin="0,0,10,0" Cursor="Hand" Click="OpenMapButton_Click"/>
+            <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top">
+                <!-- Рамка несохранённых изменений — слева от кнопки карты -->
+                <Border x:Name="UnsavedWarning"
+                BorderBrush="#E31E24" BorderThickness="1" CornerRadius="2"
+                Background="Transparent" Padding="10,4" Margin="0,0,10,0"
+                Visibility="Collapsed" VerticalAlignment="Center">
+                    <TextBlock Text="⚠ КОНФИГУРАЦИЯ ДАННЫХ НЕ СОХРАНЕНА!"
+                       Foreground="#E31E24" FontWeight="Bold" FontSize="12"/>
+                </Border>
+
+                <Button x:Name="OpenMapButton" Content="🗺️ Открыть карту" Width="130" Height="28"
+                Background="#003C78" Foreground="White" BorderBrush="Orange" BorderThickness="1"
+                Margin="0,0,10,0" Cursor="Hand" Click="OpenMapButton_Click"/>
 
                 <StackPanel x:Name="AdminButtons" Orientation="Horizontal" Visibility="Collapsed">
-                    <Button x:Name="EditButton" Content="Режим редактирования" Width="140" Height="28" 
-                            Background="#FF9800" Foreground="White" BorderBrush="Transparent" 
-                            Margin="0,0,10,0" Cursor="Hand" Click="EditButton_Click"/>
-                    <Button x:Name="SaveButton" Content="Сохранить изменения" Width="140" Height="28" 
-                            Background="#4CAF50" Foreground="White" BorderBrush="Transparent" 
-                            Cursor="Hand" Click="SaveButton_Click" Visibility="Collapsed"/>
+                    <Button x:Name="EditButton" Content="Режим редактирования" Width="140" Height="28"
+                    Background="#FF9800" Foreground="White" BorderBrush="Transparent"
+                    Margin="0,0,10,0" Cursor="Hand" Click="EditButton_Click"/>
+                    <Button x:Name="SaveButton" Content="Сохранить изменения" Width="140" Height="28"
+                    Background="#4CAF50" Foreground="White" BorderBrush="Transparent"
+                    Cursor="Hand" Click="SaveButton_Click" Visibility="Collapsed"/>
                 </StackPanel>
             </StackPanel>
         </Grid>
 
-        <!-- ОСНОВНАЯ ЧАСТЬ: Левая панель + (Поиск и Таблица) -->
+        <!-- ОСНОВНАЯ ЧАСТЬ -->
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="220"/>
@@ -54,10 +174,9 @@
             </Grid.ColumnDefinitions>
 
             <!-- ЛЕВАЯ ПАНЕЛЬ -->
-            <Border Grid.Column="0" Background="#003C78" CornerRadius="4" BorderBrush="Orange" BorderThickness="1" Margin="0,0,5,0" Padding="8">
+            <Border x:Name="LeftPanelBorder" Grid.Column="0" Background="#003C78" CornerRadius="4" BorderBrush="Orange" BorderThickness="1" Margin="0,0,5,0" Padding="8">
                 <StackPanel>
                     <TextBlock Text="Справочники:" FontSize="12" FontWeight="Bold" Foreground="Orange" Margin="0,0,0,8"/>
-
                     <Button Content="Подразделения ППС" FontSize="11" Foreground="White" Background="Transparent" BorderBrush="Transparent" HorizontalContentAlignment="Left" Padding="6,6" Margin="0,1" Cursor="Hand" Click="ReferenceItem_Click" Tag="tbl_Fire3_Unit"/>
                     <Button Content="Адресные объекты" FontSize="11" Foreground="White" Background="Transparent" BorderBrush="Transparent" HorizontalContentAlignment="Left" Padding="6,6" Margin="0,1" Cursor="Hand" Click="ReferenceItem_Click" Tag="tbl_RS4_AddressObject"/>
                     <Button Content="Характеристики" FontSize="11" Foreground="White" Background="Transparent" BorderBrush="Transparent" HorizontalContentAlignment="Left" Padding="6,6" Margin="0,1" Cursor="Hand" Click="ReferenceItem_Click" Tag="tbl_EWS_Type"/>
@@ -66,17 +185,18 @@
                     <Button Content="Пожарные гидранты" FontSize="11" Foreground="White" Background="Transparent" BorderBrush="Transparent" HorizontalContentAlignment="Left" Padding="6,6" Margin="0,1" Cursor="Hand" Click="ReferenceItem_Click" Tag="tbl_EWS"/>
                 </StackPanel>
             </Border>
+            <Button x:Name="ClearSearchButton" Grid.Column="1" Content="Очистить" Width="70" Height="28" Margin="5,0,0,0"
+        Background="#003C78" Foreground="White" BorderBrush="Orange" BorderThickness="1"
+        Cursor="Hand" Click="ClearSearch_Click"/>
 
-            <!-- ПРАВАЯ ЧАСТЬ: Поиск + Таблица -->
+            <!-- ПРАВАЯ ЧАСТЬ -->
             <Grid Grid.Column="1">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
-                    <!-- Поиск -->
                     <RowDefinition Height="*"/>
-                    <!-- Таблица -->
                 </Grid.RowDefinitions>
 
-                <!-- Панель поиска и регулировки -->
+                <!-- Панель поиска -->
                 <Border Grid.Row="0" Margin="0,0,0,5">
                     <Grid>
                         <Grid.ColumnDefinitions>
@@ -86,99 +206,51 @@
                         </Grid.ColumnDefinitions>
 
                         <TextBox x:Name="SearchTextBox" Grid.Column="0" Height="28" FontSize="12" Padding="8,4"
-                 TextChanged="SearchTextBox_TextChanged"
-                 Background="White" BorderBrush="Orange" BorderThickness="1"/>
+                                 TextChanged="SearchTextBox_TextChanged"
+                                 Background="White" BorderBrush="Orange" BorderThickness="1"/>
 
                         <TextBlock Grid.Column="0" Text="🔍 Поиск по таблице..." Foreground="Gray" FontSize="12"
-                   Margin="10,6,0,0" IsHitTestVisible="False"
-                   Visibility="{Binding ElementName=SearchTextBox, Path=Text, Converter={StaticResource EmptyToVisibilityConverter}, FallbackValue=Visible}"/>
+                                   Margin="10,6,0,0" IsHitTestVisible="False"
+                                   Visibility="{Binding ElementName=SearchTextBox, Path=Text, Converter={StaticResource EmptyToVisibilityConverter}, FallbackValue=Visible}"/>
 
                         <Button Grid.Column="1" Content="Очистить" Width="70" Height="28" Margin="5,0,0,0"
-                Background="#003C78" Foreground="White" BorderBrush="Orange" BorderThickness="1"
-                Cursor="Hand" Click="ClearSearch_Click"/>
+                                Background="#003C78" Foreground="White" BorderBrush="Orange" BorderThickness="1"
+                                Cursor="Hand" Click="ClearSearch_Click"/>
 
-                        <!-- Регулятор размера шрифта -->
                         <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="10,0,0,0" VerticalAlignment="Center">
                             <TextBlock Text="A" FontSize="10" Foreground="White" VerticalAlignment="Center" Margin="0,0,5,0"/>
                             <Slider x:Name="FontSizeSlider" Width="100" Minimum="9" Maximum="16" Value="11" 
-                    TickFrequency="1" IsSnapToTickEnabled="True"
-                    ValueChanged="FontSizeSlider_ValueChanged"/>
+                                    TickFrequency="1" IsSnapToTickEnabled="True"
+                                    ValueChanged="FontSizeSlider_ValueChanged"/>
                             <TextBlock Text="A" FontSize="14" Foreground="White" VerticalAlignment="Center" Margin="5,0,0,0"/>
                         </StackPanel>
                     </Grid>
                 </Border>
-                
+
                 <!-- Таблица -->
                 <Border Grid.Row="1" Background="White" CornerRadius="4" BorderBrush="Orange" BorderThickness="1" Padding="4">
                     <DataGrid x:Name="ReferenceDataGrid" 
-          AutoGenerateColumns="True" 
-          ColumnWidth="Auto"
-          IsReadOnly="True" 
-          CanUserAddRows="False"
-          Foreground="{DynamicResource DataGridForeground}"
-          BorderThickness="0"
-                    Background="{DynamicResource DataGridBackground}"
-          RowBackground="{DynamicResource DataGridRowBackground}"
-          AlternatingRowBackground="{DynamicResource DataGridAltRowBackground}"
-          HeadersVisibility="Column"
-          FontSize="11"
-         GridLinesVisibility="All"
-          EnableRowVirtualization="True"
-          EnableColumnVirtualization="True"
-          VirtualizingPanel.IsVirtualizing="True"
-          VirtualizingPanel.VirtualizationMode="Recycling"
-          ScrollViewer.HorizontalScrollBarVisibility="Auto"
-          ScrollViewer.VerticalScrollBarVisibility="Auto"
-          MouseDoubleClick="DataGrid_MouseDoubleClick">
-
-                        <DataGrid.ColumnHeaderStyle>
-                            <Style TargetType="DataGridColumnHeader">
-                                <Setter Property="Background" Value="#003C78"/>
-                                <Setter Property="Foreground" Value="Orange"/>
-                                <Setter Property="FontWeight" Value="Bold"/>
-                                <Setter Property="Padding" Value="12,8"/>
-                                <Setter Property="BorderThickness" Value="0"/>
-                                <Setter Property="HorizontalContentAlignment" Value="Left"/>
-                            </Style>
-                        </DataGrid.ColumnHeaderStyle>
-
-                        <DataGrid.CellStyle>
-                            <Style TargetType="DataGridCell">
-                                <Setter Property="Padding" Value="12,6"/>
-                                <Setter Property="BorderBrush" Value="{DynamicResource DataGridGridLinesBrush}"/>
-                                <Setter Property="BorderThickness" Value="0,0,1,0"/>
-                                <Setter Property="Background" Value="Transparent"/>
-                                <Setter Property="Foreground" Value="{DynamicResource DataGridForeground}"/>
-                                <Setter Property="HorizontalContentAlignment" Value="Left"/>
-                                <Setter Property="VerticalContentAlignment" Value="Center"/>
-                                <Setter Property="Template">
-                                    <Setter.Value>
-                                        <ControlTemplate TargetType="DataGridCell">
-                                            <Border Background="{TemplateBinding Background}"
-                            BorderBrush="{TemplateBinding BorderBrush}"
-                            BorderThickness="{TemplateBinding BorderThickness}"
-                            Padding="{TemplateBinding Padding}">
-                                                <ContentPresenter VerticalAlignment="Center"/>
-                                            </Border>
-                                        </ControlTemplate>
-                                    </Setter.Value>
-                                </Setter>
-                                <Style.Triggers>
-                                    <Trigger Property="IsSelected" Value="True">
-                                        <Setter Property="Background" Value="#2196F3"/>
-                                        <Setter Property="Foreground" Value="White"/>
-                                    </Trigger>
-                                </Style.Triggers>
-                            </Style>
-                        </DataGrid.CellStyle>
-                        
-                        <DataGrid.RowStyle>
-                            <Style TargetType="DataGridRow">
-                                <Setter Property="BorderBrush" Value="{DynamicResource DataGridGridLinesBrush}"/>
-                                <Setter Property="BorderThickness" Value="0,0,0,1"/>
-                            </Style>
-                        </DataGrid.RowStyle>
-                    </DataGrid>
+                              AutoGeneratingColumn="ReferenceDataGrid_AutoGeneratingColumn"
+                              CellEditEnding="ReferenceDataGrid_CellEditEnding"
+                              AutoGenerateColumns="True" 
+                              ColumnWidth="Auto"
+                              IsReadOnly="True" 
+                              CanUserAddRows="False"
+                              Foreground="{DynamicResource DataGridForeground}"
+                              Background="{DynamicResource DataGridBackground}"
+                              RowBackground="{DynamicResource DataGridRowBackground}"
+                              AlternatingRowBackground="{DynamicResource DataGridAltRowBackground}"
+                              BorderThickness="0"
+                              HeadersVisibility="Column"
+                              FontSize="11"
+                              GridLinesVisibility="All"
+                              EnableRowVirtualization="True"
+                              EnableColumnVirtualization="False"
+                              VirtualizingPanel.IsVirtualizing="True"
+                              VirtualizingPanel.VirtualizationMode="Recycling"
+                              ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                              ScrollViewer.VerticalScrollBarVisibility="Auto"
+                              MouseDoubleClick="DataGrid_MouseDoubleClick"/>
                 </Border>
             </Grid>
         </Grid>
